@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0e14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TradeLedger">
+<meta name="description" content="TradeLedger — journal de trading complet : suivi des trades et positions, statistiques, calendrier P&L, et coach mental pour rester discipliné.">
+<meta name="color-scheme" content="dark light">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>TradeLedger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green:#26d07c; --green-dim:#1a7d4f; --red:#ff5d5d; --red-dim:#9e3838; --accent:#f5b544;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --sans:'IBM Plex Sans',system-ui,sans-serif;
+    --display:'Bricolage Grotesque',var(--sans);
+  }
+  [data-theme="dark"]{
+    --bg:#0a0e14; --panel:#121822; --panel-2:#0f141d; --line:#1e2733; --line-soft:#161d27;
+    --txt:#e6edf3; --muted:#7d8a9c; --hover:#10161f; --input:#0c1118;
+  }
+  [data-theme="light"]{
+    --bg:#f4f6f9; --panel:#ffffff; --panel-2:#f8fafc; --line:#e2e8f0; --line-soft:#eef2f6;
+    --txt:#16202c; --muted:#64748b; --hover:#f1f5f9; --input:#f1f5f9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(245,181,68,.06), transparent 60%),
+      radial-gradient(800px 600px at -10% 110%, rgba(38,208,124,.05), transparent 55%),
+      var(--bg);
+    color:var(--txt);font-family:var(--sans);min-height:100vh;padding-bottom:90px;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  /* top bar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--green),var(--green-dim));display:grid;place-items:center;font-family:var(--mono);font-weight:600;color:#04130b;font-size:18px}
+  .brand h1{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.4px}
+  .topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  select,input,textarea{font-family:var(--mono);background:var(--input);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px 10px;font-size:13.5px;outline:none;transition:.15s}
+  textarea{font-family:var(--sans);resize:vertical}
+  select:focus,input:focus,textarea:focus{border-color:var(--green);background:var(--panel-2)}
+  .acct-sel{min-width:120px}
+  button{font-family:var(--sans);cursor:pointer;border:none;border-radius:8px;font-weight:600;font-size:13px;transition:.15s}
+  .ic{background:var(--panel);color:var(--txt);border:1px solid var(--line);width:38px;height:38px;display:grid;place-items:center;font-size:15px}
+  .ic:hover{border-color:#33414f;background:var(--hover)}
+  .btn-ghost{background:var(--panel);color:var(--txt);border:1px solid var(--line);padding:9px 13px}
+  .btn-ghost:hover{border-color:#33414f;background:var(--hover)}
+  .btn-primary{background:linear-gradient(135deg,var(--green),var(--green-dim));color:#04130b;padding:9px 15px}
+  .btn-primary:hover{filter:brightness(1.07)}
+  .btn-danger{background:rgba(255,93,93,.12);color:var(--red);border:1px solid rgba(255,93,93,.3);padding:9px 13px}
+  .btn-sm{padding:6px 10px;font-size:12px}
+  /* nav */
+  nav.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:4px;overflow-x:auto;margin-bottom:18px;position:sticky;top:8px;z-index:30}
+  nav.tabs button{flex:1;white-space:nowrap;padding:10px 12px;background:none;color:var(--muted);border-radius:8px}
+  nav.tabs button.active{background:linear-gradient(180deg,var(--green),var(--green-dim));color:#04130b}
+  /* cards & stats */
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:15px;padding:17px;margin-bottom:16px}
+  .card h2{font-family:var(--display);font-weight:600;font-size:14.5px;margin-bottom:13px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--accent)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:11px;margin-bottom:16px}
+  .stat{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:13px;padding:14px 15px}
+  .stat .label{font-size:10.5px;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;font-weight:600}
+  .stat .val{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:6px;letter-spacing:-.5px}
+  .stat .sub{font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+  canvas{width:100%;display:block}
+  /* filters */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .filters input,.filters select{flex:1;min-width:120px}
+  /* table */
+  .tbl-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:680px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;padding:0 11px 10px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap}
+  th:hover{color:var(--txt)}
+  td{padding:11px;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--hover)}
+  .tag{display:inline-block;background:var(--input);border:1px solid var(--line);color:var(--accent);padding:1px 7px;border-radius:20px;font-size:10.5px;font-family:var(--sans);font-weight:600;margin:1px}
+  .dir{font-weight:600;font-size:10.5px;padding:2px 7px;border-radius:5px}
+  .dir.long{background:rgba(38,208,124,.12);color:var(--green)} .dir.short{background:rgba(255,93,93,.12);color:var(--red)}
+  .rowbtn{background:none;color:var(--muted);font-size:14px;padding:3px 6px;border-radius:5px}
+  .rowbtn:hover{background:var(--hover);color:var(--txt)}
+  .empty{text-align:center;padding:40px 20px;color:var(--muted)}
+  .empty .big{font-family:var(--display);font-size:16px;color:var(--txt);margin-bottom:5px}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(4,7,11,.72);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;z-index:80;overflow-y:auto}
+  .overlay.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:22px;width:100%;max-width:560px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .modal h3{font-family:var(--display);font-weight:800;font-size:18px;margin-bottom:16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%}
+  .seg{display:flex;gap:8px}
+  .seg button{flex:1;padding:10px;border:1px solid var(--line);background:var(--input);color:var(--muted)}
+  .seg button.active.long{background:rgba(38,208,124,.14);border-color:var(--green);color:var(--green)}
+  .seg button.active.short{background:rgba(255,93,93,.14);border-color:var(--red);color:var(--red)}
+  .emoji-row{display:flex;gap:6px}
+  .emoji-row button{flex:1;padding:9px 0;border:1px solid var(--line);background:var(--input);color:var(--muted);font-size:16px}
+  .emoji-row button.active{border-color:var(--accent);background:rgba(245,181,68,.14)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--input);color:var(--muted);font-size:12px;font-family:var(--sans);font-weight:600;cursor:pointer}
+  .chip.active{border-color:var(--accent);color:var(--accent);background:rgba(245,181,68,.12)}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
+  .pnl-preview{font-family:var(--mono);font-size:13px;color:var(--muted);margin:4px 0 12px;display:flex;gap:16px;flex-wrap:wrap}
+  .shot-prev{max-width:100%;max-height:150px;border-radius:8px;border:1px solid var(--line);margin-top:8px;display:none}
+  /* calendar */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .cal-dow{text-align:center;font-size:10.5px;color:var(--muted);font-weight:600;text-transform:uppercase;padding-bottom:4px}
+  .cal-cell{aspect-ratio:1;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);padding:5px 6px;display:flex;flex-direction:column;justify-content:space-between;font-family:var(--mono);min-height:46px}
+  .cal-cell.empty{background:transparent;border:none}
+  .cal-cell .d{font-size:10.5px;color:var(--muted)}
+  .cal-cell .v{font-size:11px;font-weight:600}
+  .cal-cell.win{background:rgba(38,208,124,.13);border-color:rgba(38,208,124,.35)}
+  .cal-cell.loss{background:rgba(255,93,93,.12);border-color:rgba(255,93,93,.32)}
+  /* insights */
+  .insight{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:13.5px;line-height:1.45}
+  .insight:last-child{border-bottom:none}
+  .insight .dot{flex-shrink:0;width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--accent)}
+  .insight.good .dot{background:var(--green)} .insight.warn .dot{background:var(--red)}
+  /* segmented bars */
+  .segrow{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12.5px}
+  .segrow .name{width:120px;flex-shrink:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .segrow .bar{flex:1;height:18px;background:var(--input);border-radius:5px;overflow:hidden;position:relative}
+  .segrow .fill{height:100%;border-radius:5px}
+  .segrow .num{width:90px;text-align:right;font-family:var(--mono);flex-shrink:0}
+  .muted{color:var(--muted)}
+  .hint{font-size:12px;color:var(--muted);font-style:italic;padding:6px 0}
+  /* cashflow list */
+  .cf{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:13px}
+  .cf:last-child{border-bottom:none}
+  .row-between{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  /* toast */
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 14px 40px rgba(0,0,0,.4);z-index:120;transition:transform .25s;font-size:13.5px}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .toast button{background:none;color:var(--green);font-weight:700}
+  footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:24px;font-family:var(--mono)}
+  .switch{display:flex;align-items:center;gap:8px}
+  .det-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+  .det-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px 16px;margin-bottom:14px}
+  .det-grid .k,.det-block .k{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}
+  .det-grid .v{font-family:var(--mono);font-weight:600;margin-top:2px;font-size:14px}
+  .det-block{margin-bottom:11px}
+  .det-block .t{font-size:13.5px;line-height:1.45;white-space:pre-wrap;margin-top:3px}
+  .det-shot{max-width:100%;border-radius:10px;border:1px solid var(--line);margin:4px 0 12px;display:block}
+  .goal-bar{height:12px;background:var(--input);border-radius:6px;overflow:hidden;margin-top:9px}
+  .goal-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--green),var(--green-dim));transition:width .3s}
+  .banner{background:linear-gradient(180deg,rgba(245,181,68,.13),rgba(245,181,68,.04));border:1px solid rgba(245,181,68,.35);border-radius:13px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;font-size:13px}
+  .row-click{cursor:pointer}
+  .fab{position:fixed;right:18px;bottom:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dim));color:#04130b;font-size:30px;font-weight:600;box-shadow:0 10px 30px rgba(38,208,124,.4);z-index:60;display:grid;place-items:center;line-height:1;border:none;cursor:pointer}
+  .fab:hover{filter:brightness(1.07);transform:translateY(-2px)}
+  .recap{background:linear-gradient(150deg,#101826,#0a0e14);border:1px solid #1e2733;border-radius:18px;padding:22px;color:#e6edf3}
+  .recap .rhead{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .recap .rlogo{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--green),var(--green-dim));display:grid;place-items:center;color:#04130b;font-weight:600;font-family:var(--mono)}
+  .recap .rk{font-size:11px;color:#7d8a9c;text-transform:uppercase;letter-spacing:.4px}
+  .recap .rbig{font-family:var(--mono);font-size:34px;font-weight:600;letter-spacing:-1px;margin:5px 0}
+  .recap .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:14px}
+  .recap .rv{font-family:var(--mono);font-size:18px;font-weight:600;margin-top:2px}
+  .recap .rfoot{margin-top:16px;font-size:11px;color:#7d8a9c;text-align:center;letter-spacing:.3px}
+  .choose-opt{display:block;width:100%;text-align:left;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:15px 16px;margin-bottom:10px;color:var(--txt)}
+  .choose-opt:hover{border-color:var(--green);background:var(--panel-2)}
+  .choose-opt .co-t{font-weight:600;font-size:15px;font-family:var(--display)}
+  .choose-opt .co-s{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .quiz-opts{display:flex;flex-direction:column;gap:6px}
+  .quiz-opt{text-align:left;background:var(--input);border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--txt);font-size:13.5px;width:100%}
+  .quiz-opt.active{border-color:var(--green);background:rgba(38,208,124,.12);color:var(--green);font-weight:600}
+  .tab-intro{color:var(--muted);font-size:13px;margin:-2px 0 16px;line-height:1.5}
+  @media(max-width:560px){.grid3{grid-template-columns:1fr 1fr}.modal{padding:18px}.brand h1{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><div class="logo">↗</div><h1>TradeLedger</h1></div>
+    <div class="topbar-right">
+      <select class="acct-sel" id="acctSel" title="Compte"></select>
+      <button class="ic" id="helpBtn" title="Aide" aria-label="Aide">?</button>
+      <button class="ic" id="langBtn" title="Langue" aria-label="Changer de langue">FR</button>
+      <button class="ic" id="themeBtn" title="Thème" aria-label="Changer de thème">☾</button>
+      <button class="btn-primary" id="addBtn" data-i18n="newTrade">+ Trade</button>
+    </div>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="dashboard" class="active" data-i18n="tabDash">Tableau de bord</button>
+    <button data-tab="trades" data-i18n="tabTrades">Trades</button>
+    <button data-tab="calendar" data-i18n="tabCal">Calendrier</button>
+    <button data-tab="analyse" data-i18n="tabAnalyse">Analyse</button>
+    <button data-tab="mental" data-i18n="tabMental">Mental</button>
+    <button data-tab="coach" data-i18n="tabCoach">Coach</button>
+    <button data-tab="account" data-i18n="tabAccount">Compte</button>
+  </nav>
+
+  <section id="tab-dashboard" class="tab"></section>
+  <section id="tab-trades" class="tab" style="display:none"></section>
+  <section id="tab-calendar" class="tab" style="display:none"></section>
+  <section id="tab-analyse" class="tab" style="display:none"></section>
+  <section id="tab-mental" class="tab" style="display:none"></section>
+  <section id="tab-coach" class="tab" style="display:none"></section>
+  <section id="tab-account" class="tab" style="display:none"></section>
+
+  <footer><span data-i18n="footer">Tes données restent sur ton appareil · TradeLedger</span></footer>
+</div>
+
+<!-- Trade modal -->
+<div class="overlay" id="tradeOverlay">
+  <div class="modal">
+    <h3 id="tradeModalTitle" data-i18n="newTrade">Nouveau trade</h3>
+    <div class="field">
+      <label data-i18n="direction">Sens</label>
+      <div class="seg" id="dirSeg">
+        <button type="button" data-dir="long" class="active long" data-i18n="long">Long (achat)</button>
+        <button type="button" data-dir="short" class="short" data-i18n="short">Short (vente)</button>
+      </div>
+    </div>
+    <div class="grid3">
+      <div class="field"><label data-i18n="symbol">Actif</label><input id="f_symbol" placeholder="BTC, AAPL…"></div>
+      <div class="field"><label data-i18n="dateOpen">Date entrée</label><input id="f_dateOpen" type="date"></div>
+      <div class="field"><label data-i18n="timeOpen">Heure (opt.)</label><input id="f_timeOpen" type="time"></div>
+    </div>
+    <div class="grid3">
+      <div class="field"><label data-i18n="entry">Prix entrée</label><input id="f_entry" type="number" step="any" placeholder="0"></div>
+      <div class="field"><label data-i18n="exit">Prix sortie</label><input id="f_exit" type="number" step="any" placeholder="0"></div>
+      <div class="field"><label data-i18n="qty">Quantité</label><input id="f_qty" type="number" step="any" placeholder="1"></div>
+    </div>
+    <button type="button" class="btn-ghost btn-sm" id="advToggle" style="width:100%;margin-bottom:12px" data-i18n="advMore">+ de détails</button>
+    <div id="advFields" style="display:none">
+    <div class="grid3">
+      <div class="field"><label data-i18n="stop">Stop (opt.)</label><input id="f_stop" type="number" step="any" placeholder="0"></div>
+      <div class="field"><label data-i18n="target">Objectif (opt.)</label><input id="f_target" type="number" step="any" placeholder="0"></div>
+      <div class="field"><label data-i18n="fees">Frais (opt.)</label><input id="f_fees" type="number" step="any" placeholder="0"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label data-i18n="dateClose">Date sortie (opt.)</label><input id="f_dateClose" type="date"></div>
+      <div class="field"><label data-i18n="strat">Stratégie</label><input id="f_strat" placeholder="Breakout, Scalp…"></div>
+    </div>
+    <div class="field"><label data-i18n="tags">Tags (séparés par virgule)</label><input id="f_tags" placeholder="momentum, news"><div class="chips" id="tagSugg" style="margin-top:6px"></div></div>
+    <div class="field">
+      <label data-i18n="discipline">Discipline / émotion</label>
+      <div class="emoji-row" id="emojiRow">
+        <button type="button" data-e="1">😡</button><button type="button" data-e="2">😕</button>
+        <button type="button" data-e="3">😐</button><button type="button" data-e="4">🙂</button>
+        <button type="button" data-e="5">😎</button>
+      </div>
+    </div>
+    <div class="field">
+      <label data-i18n="mistakes">Erreurs (clique pour cocher)</label>
+      <div class="chips" id="mistakeChips"></div>
+    </div>
+    <div class="field" id="rulesField">
+      <label data-i18n="rulesFollowed">Règles respectées</label>
+      <div class="chips" id="ruleChips"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label data-i18n="plan">Plan / thèse avant</label><textarea id="f_plan" rows="2" placeholder="Pourquoi ce trade ?"></textarea></div>
+      <div class="field"><label data-i18n="lesson">Leçon après</label><textarea id="f_lesson" rows="2" placeholder="Qu'as-tu appris ?"></textarea></div>
+    </div>
+    <div class="field"><label data-i18n="notes">Notes</label><textarea id="f_notes" rows="2"></textarea></div>
+    <div class="field">
+      <label data-i18n="screenshot">Capture du graphe (opt.)</label>
+      <input id="f_shot" type="file" accept="image/*">
+      <img id="shotPrev" class="shot-prev">
+    </div>
+    </div>
+    <div class="pnl-preview" id="pnlPreview"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="tradeCancel" data-i18n="cancel">Annuler</button>
+      <button class="btn-primary" id="tradeSave" data-i18n="save">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cashflow modal -->
+<div class="overlay" id="cfOverlay">
+  <div class="modal">
+    <h3 data-i18n="cashflow">Dépôt / Retrait</h3>
+    <div class="field"><label data-i18n="type">Type</label>
+      <select id="cf_type"><option value="deposit" data-i18n="deposit">Dépôt</option><option value="withdraw" data-i18n="withdraw">Retrait</option></select>
+    </div>
+    <div class="grid2">
+      <div class="field"><label data-i18n="amount">Montant</label><input id="cf_amount" type="number" step="any"></div>
+      <div class="field"><label data-i18n="date">Date</label><input id="cf_date" type="date"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cfCancel" data-i18n="cancel">Annuler</button>
+      <button class="btn-primary" id="cfSave" data-i18n="save">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Calculator modal -->
+<div class="overlay" id="calcOverlay">
+  <div class="modal">
+    <h3 data-i18n="posCalc">Calculateur de taille de position</h3>
+    <div class="grid2">
+      <div class="field"><label data-i18n="capital">Capital</label><input id="c_capital" type="number" step="any" placeholder="10000"></div>
+      <div class="field"><label data-i18n="riskPct">Risque (%)</label><input id="c_risk" type="number" step="any" placeholder="1"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label data-i18n="entry">Prix entrée</label><input id="c_entry" type="number" step="any"></div>
+      <div class="field"><label data-i18n="stop">Stop</label><input id="c_stop" type="number" step="any"></div>
+    </div>
+    <div class="card" style="margin:6px 0 14px" id="calcResult"></div>
+    <div class="modal-actions"><button class="btn-ghost" id="calcClose" data-i18n="close">Fermer</button></div>
+  </div>
+</div>
+
+<!-- Account modal -->
+<div class="overlay" id="acctOverlay">
+  <div class="modal">
+    <h3 id="acctModalTitle" data-i18n="newAccount">Nouveau compte</h3>
+    <div class="field"><label data-i18n="accName">Nom</label><input id="a_name" placeholder="Compte réel, Démo…"></div>
+    <div class="grid2">
+      <div class="field"><label data-i18n="currency">Devise</label>
+        <select id="a_curr"><option>€</option><option>$</option><option>£</option><option>¥</option></select></div>
+      <div class="field"><label data-i18n="startBal">Solde de départ</label><input id="a_start" type="number" step="any" placeholder="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="acctCancel" data-i18n="cancel">Annuler</button>
+      <button class="btn-primary" id="acctSave" data-i18n="save">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="detailOverlay"><div class="modal"><div id="detailBody"></div></div></div>
+
+<div class="overlay" id="importOverlay"><div class="modal">
+  <h3 id="importTitle">Import</h3>
+  <div class="field"><label data-i18n="importChoose">Choisir un fichier</label><input type="file" id="importPickFile"></div>
+  <div class="field"><label data-i18n="importPasteLabel">…ou colle le contenu ici</label><textarea id="importPaste" rows="6"></textarea></div>
+  <div class="modal-actions"><button class="btn-ghost" id="importCancel" data-i18n="cancel">Annuler</button><button class="btn-primary" id="importDo" data-i18n="importBtn">Importer</button></div>
+</div></div>
+
+<div class="overlay" id="confirmOverlay"><div class="modal" style="max-width:430px">
+  <div id="confirmMsg" style="font-size:14.5px;line-height:1.5;white-space:pre-wrap;margin-bottom:18px"></div>
+  <div class="modal-actions"><button class="btn-ghost" id="confirmCancel">Annuler</button><button class="btn-primary" id="confirmOk">OK</button></div>
+</div></div>
+
+<div class="overlay" id="guideOverlay"><div class="modal"><div id="guideBody"></div></div></div>
+
+<div class="overlay" id="recapOverlay"><div class="modal"><div id="recapBody"></div></div></div>
+
+<div class="overlay" id="posOverlay"><div class="modal">
+  <h3 id="posModalTitle">Position</h3>
+  <div class="field"><label data-i18n="direction">Sens</label><div class="seg" id="posDirSeg"><button type="button" data-pdir="long" class="active long" data-i18n="long">Long</button><button type="button" data-pdir="short" class="short" data-i18n="short">Short</button></div></div>
+  <div class="grid2"><div class="field"><label data-i18n="symbol">Actif</label><input id="p_symbol" placeholder="BTC, AAPL…"></div><div class="field"><label data-i18n="qty">Quantité</label><input id="p_qty" type="number" step="any"></div></div>
+  <div class="grid2"><div class="field"><label data-i18n="entry">Prix entrée</label><input id="p_entry" type="number" step="any"></div><div class="field"><label data-i18n="currentPrice">Prix actuel</label><input id="p_mark" type="number" step="any"></div></div>
+  <div class="grid2"><div class="field"><label data-i18n="stop">Stop (opt.)</label><input id="p_stop" type="number" step="any"></div><div class="field"><label data-i18n="target">Objectif (opt.)</label><input id="p_target" type="number" step="any"></div></div>
+  <div class="field"><label data-i18n="strat">Stratégie</label><input id="p_strat"></div>
+  <div class="modal-actions"><button class="btn-ghost" id="posCancel" data-i18n="cancel">Annuler</button><button class="btn-primary" id="posSave" data-i18n="save">Enregistrer</button></div>
+</div></div>
+
+<div class="overlay" id="closeOverlay"><div class="modal">
+  <h3 data-i18n="closePos">Clôturer</h3>
+  <div id="closePosInfo" class="hint" style="margin-bottom:12px"></div>
+  <div class="grid2"><div class="field"><label data-i18n="exit">Prix de sortie</label><input id="cl_exit" type="number" step="any"></div><div class="field"><label data-i18n="dateClose">Date sortie</label><input id="cl_date" type="date"></div></div>
+  <div class="modal-actions"><button class="btn-ghost" id="closeCancel" data-i18n="cancel">Annuler</button><button class="btn-primary" id="closeSave" data-i18n="closePos">Clôturer</button></div>
+</div></div>
+
+<div class="overlay" id="chooseOverlay"><div class="modal" style="max-width:440px">
+  <h3 data-i18n="addChooserTitle">Ajouter…</h3>
+  <button type="button" class="choose-opt" id="chooseClosed"><div class="co-t" data-i18n="addClosed">Trade déjà clôturé</div><div class="co-s" data-i18n="addClosedSub">Tu saisis l'ouverture et la fermeture en une fois.</div></button>
+  <button type="button" class="choose-opt" id="chooseLive"><div class="co-t" data-i18n="addLive">Position en cours (live)</div><div class="co-s" data-i18n="addLiveSub">Tu saisis seulement l'ouverture ; tu la clôtureras plus tard.</div></button>
+  <div class="modal-actions"><button class="btn-ghost" id="chooseCancel" data-i18n="cancel">Annuler</button></div>
+</div></div>
+
+<div class="overlay" id="coachOverlay"><div class="modal"><div id="coachBody"></div></div></div>
+
+<button class="fab" id="fab" title="Nouveau trade" aria-label="Ajouter un trade ou une position">+</button>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastAction"></button></div>
+
+<script>
+"use strict";
+
+/* ============================= i18n ============================= */
+var T = {
+  fr:{newTrade:"+ Trade",tabDash:"Tableau de bord",tabTrades:"Trades",tabCal:"Calendrier",tabAnalyse:"Analyse",tabAccount:"Compte",introDash:"Ta vue d'ensemble : performance, courbe de capital et points clés.",introTrades:"Tes positions en cours et ton journal de trades clôturés.",introCal:"Ton P&L jour par jour, en un coup d'œil.",introAnalyse:"Tes statistiques détaillées et tes habitudes de trading.",introMental:"Note ton ressenti du jour et l'effet de ton mental sur tes résultats.",introCoach:"Prépare ta tête : profil, ressenti du jour et bilan mental approfondi.",introAccount:"Tes comptes, tes règles, tes réglages et tes données.",periodLabel:"Période",pAll:"Tout",p30:"30 j",p90:"90 j",pMonth:"Ce mois",pYear:"Cette année",byTag:"Par tag",byMistake:"Par type d'erreur",payoff:"Ratio gain/perte",goalTitle:"Objectif du mois",ofGoal:"sur",demoBanner:"Tu explores des données de démonstration.",startFresh:"Démarrer mon journal",allTags:"Tous les tags",storageUsed:"Stockage utilisé",confirmFresh:"Effacer la démo et démarrer un journal vierge ?",importChoose:"Choisir un fichier",importPasteLabel:"…ou colle le contenu ici",importBtn:"Importer",importEmpty:"Choisis un fichier ou colle le contenu.",guideTitle:"Guide rapide",advMore:"+ de détails",advLess:"− de détails",history:"Historique",clearFilters:"Réinitialiser",recapShare:"Partager mes stats",copySummary:"Copier le résumé",copied:"Copié !",rulesTitle:"Mes règles de trading",rulesFollowed:"Règles respectées",rulesAddPh:"Ex. J'ai un stop-loss",dailyLoss:"Limite de perte / jour",lossHit:"Tu as atteint ta limite de perte du jour. Beaucoup de traders s'arrêtent là — protège ton capital et ta tête.",noRulesHint:"Ajoute des règles ici pour pouvoir les cocher sur chaque trade.",positionsTitle:"Positions ouvertes",addPosition:"+ Position",currentPrice:"Prix actuel",unrealized:"P&L latent total",closePos:"Clôturer",refreshPrice:"Actualiser le prix (crypto)",noPositions:"Aucune position ouverte. Ajoute celles que tu as en cours chez ton broker.",priceUnavail:"Prix indisponible — saisis-le à la main (auto seulement pour les cryptos).",priceUpdated:"Prix mis à jour",brokerNote:"Saisie manuelle : l'app ne se connecte pas directement à ton broker (sécurité). Tu reportes tes positions et mets à jour le prix.",addChooserTitle:"Ajouter…",addClosed:"Trade déjà clôturé",addClosedSub:"Tu saisis l'ouverture et la fermeture en une fois.",addLive:"Position en cours (live)",addLiveSub:"Tu saisis seulement l'ouverture ; tu la clôtureras plus tard.",liveWaiting:"En attente des prix en direct…",liveNote:"Live : prix crypto en temps réel (données publiques, sans clé). Pour les autres actifs, mets le prix à jour à la main.",
+    direction:"Sens",long:"Long (achat)",short:"Short (vente)",symbol:"Actif",dateOpen:"Date entrée",timeOpen:"Heure (opt.)",
+    entry:"Prix entrée",exit:"Prix sortie",qty:"Quantité",stop:"Stop (opt.)",target:"Objectif (opt.)",fees:"Frais (opt.)",
+    dateClose:"Date sortie (opt.)",strat:"Stratégie",tags:"Tags (séparés par virgule)",discipline:"Discipline / émotion",
+    mistakes:"Erreurs (clique pour cocher)",plan:"Plan / thèse avant",lesson:"Leçon après",notes:"Notes",
+    screenshot:"Capture du graphe (opt.)",cancel:"Annuler",save:"Enregistrer",close:"Fermer",
+    cashflow:"Dépôt / Retrait",type:"Type",deposit:"Dépôt",withdraw:"Retrait",amount:"Montant",date:"Date",
+    posCalc:"Calculateur de taille de position",capital:"Capital",riskPct:"Risque (%)",
+    newAccount:"Nouveau compte",accName:"Nom",currency:"Devise",startBal:"Solde de départ",
+    footer:"TradeLedger v1.0 · Tes données restent sur ton appareil · Outil de suivi, pas un conseil financier.",
+    netPnl:"P&L net",winRate:"Taux de réussite",profitFactor:"Profit factor",expectancy:"Espérance/trade",avgR:"R moyen",avgHold:"Durée moyenne",holdUnit:"j",ddCurve:"Courbe de drawdown",
+    trades:"trades",equity:"Courbe de capital",drawdown:"Drawdown",insights:"Analyse de tes habitudes",
+    avgWin:"Gain moyen",avgLoss:"Perte moyenne",bestTrade:"Meilleur trade",worstTrade:"Pire trade",maxDD:"Drawdown max",
+    winStreak:"Série gagnante",lossStreak:"Série perdante",noData:"Pas encore de données — ajoute un trade.",
+    search:"Rechercher…",allStrats:"Toutes stratégies",allSymbols:"Tous actifs",allDirs:"Tous sens",allResults:"Tous résultats",
+    won:"Gagnants",lost:"Perdants",colDate:"Date",colSym:"Actif",colDir:"Sens",colEntry:"Entrée",colExit:"Sortie",
+    colQty:"Qté",colR:"R",colStrat:"Strat.",colPnl:"P&L",edit:"Modifier",duplicate:"Dupliquer",del:"Supprimer",
+    bySymbol:"Par actif",byStrat:"Par stratégie",byDir:"Par sens",byDay:"Par jour de semaine",bySession:"Par session",
+    distribution:"Distribution des résultats",monthly:"P&L par mois",needHour:"Ajoute l'heure d'entrée sur tes trades pour débloquer cette vue.",
+    balance:"Solde du compte",deposits:"Dépôts/retraits",addCf:"+ Dépôt/Retrait",noCf:"Aucun mouvement.",
+    settings:"Réglages",theme:"Thème sombre",lang:"Langue",backup:"Sauvegarde",exportJson:"Exporter (JSON)",importJson:"Importer (JSON)",
+    exportCsv:"Exporter CSV",importCsv:"Importer CSV",calcOpen:"Calculateur de position",dangerZone:"Zone sensible",walletTitle:"Portefeuille on-chain (Phantom)",walletConnect:"Connecter Phantom",walletDisconnect:"Déconnecter",walletRefresh:"Actualiser",walletConnected:"Connecté",walletBalance:"Solde",walletNote:"Lecture seule : on lit seulement ton adresse publique et ton solde. L'app ne demande jamais ta phrase secrète et ne touche jamais à tes fonds. (Solana)",walletNotFound:"Phantom non détecté. Installe l'extension Phantom, ou ouvre cette page dans le navigateur intégré de l'app Phantom.",walletError:"Solde indisponible pour le moment (réessaie une fois déployé).",
+    resetAll:"Tout effacer",manageAcct:"Comptes",addAcct:"+ Compte",renameAcct:"Renommer",delAcct:"Supprimer ce compte",
+    undo:"Annuler",deleted:"Trade supprimé",saved:"Enregistré",risk:"Risque",size:"Taille de position",shares:"unités",
+    riskAmt:"Montant risqué",rr:"Ratio R:R",reward:"Gain potentiel",confirmReset:"Effacer TOUTES les données ? Irréversible.",
+    confirmDelAcct:"Supprimer ce compte et tous ses trades ?",notAdvice:"Cet outil n'analyse que ton historique. Il ne donne aucun conseil et ne prédit rien.",
+    csvImported:" trade(s) importé(s)",csvSkippedTxt:" ignoré(s)",csvMissing:"Colonnes introuvables : ",csvConfirm:"Importer {n} trade(s) dans «{a}» ?",
+    mLabels:["FOMO","Revenge trade","Sans stop","Trop tôt","Trop tard","Plan non respecté","Sur-trading"],
+    tabMental:"Mental",tabCoach:"Coach",checkinTitle:"Ton check-in du jour",moodQ:"Comment te sens-tu aujourd'hui ?",energyQ:"Énergie",stressQ:"Stress",dayQ:"Comment s'est passée ta journée ?",checkinSave:"Enregistrer mon check-in",checkinDone:"Check-in enregistré",reflection:"Petit retour",moodTrend:"Ton humeur récente",moodVsPnl:"Mental et résultats",calmDays:"Jours calmes",tenseDays:"Jours tendus",moodTags:"Mots du jour",wellbeingNote:"Ce check-in t'aide à suivre ton mental ; il ne remplace pas un avis médical. Si tu traverses une période difficile, parles-en à une personne de confiance ou à un professionnel.",moodTagsArr:["Calme","Confiant","Stressé","Fatigué","Distrait","Motivé","Frustré","Concentré"]},
+  en:{newTrade:"+ Trade",tabDash:"Dashboard",tabTrades:"Trades",tabCal:"Calendar",tabAnalyse:"Analytics",tabAccount:"Account",introDash:"Your overview: performance, equity curve and key insights.",introTrades:"Your open positions and your closed-trade journal.",introCal:"Your P&L day by day, at a glance.",introAnalyse:"Your detailed stats and trading patterns.",introMental:"Log how you feel and how your mindset affects your results.",introCoach:"Prepare your head: profile, daily readiness and a deep mindset assessment.",introAccount:"Your accounts, rules, settings and data.",periodLabel:"Period",pAll:"All",p30:"30 d",p90:"90 d",pMonth:"This month",pYear:"This year",byTag:"By tag",byMistake:"By mistake type",payoff:"Win/loss ratio",goalTitle:"Monthly goal",ofGoal:"of",demoBanner:"You're viewing demo data.",startFresh:"Start my journal",allTags:"All tags",storageUsed:"Storage used",confirmFresh:"Clear demo and start a blank journal?",importChoose:"Choose a file",importPasteLabel:"…or paste the content here",importBtn:"Import",importEmpty:"Choose a file or paste content.",guideTitle:"Quick guide",advMore:"+ details",advLess:"− details",history:"History",clearFilters:"Clear",recapShare:"Share my stats",copySummary:"Copy summary",copied:"Copied!",rulesTitle:"My trading rules",rulesFollowed:"Rules followed",rulesAddPh:"e.g. I set a stop-loss",dailyLoss:"Daily loss limit",lossHit:"You've hit your daily loss limit. Many traders stop here — protect your capital and your head.",noRulesHint:"Add rules here so you can check them on each trade.",positionsTitle:"Open positions",addPosition:"+ Position",currentPrice:"Current price",unrealized:"Total unrealized P&L",closePos:"Close",refreshPrice:"Refresh price (crypto)",noPositions:"No open positions. Add the ones you currently hold at your broker.",priceUnavail:"Price unavailable — enter it manually (auto only for crypto).",priceUpdated:"Price updated",brokerNote:"Manual entry: the app doesn't connect directly to your broker (for security). You log your positions and update the price.",addChooserTitle:"Add…",addClosed:"Closed trade",addClosedSub:"Enter the open and close at once.",addLive:"Open position (live)",addLiveSub:"Enter only the open; you'll close it later.",liveWaiting:"Waiting for live prices…",liveNote:"Live: real-time crypto prices (public data, no key). For other assets, update the price manually.",
+    direction:"Direction",long:"Long (buy)",short:"Short (sell)",symbol:"Symbol",dateOpen:"Entry date",timeOpen:"Time (opt.)",
+    entry:"Entry price",exit:"Exit price",qty:"Quantity",stop:"Stop (opt.)",target:"Target (opt.)",fees:"Fees (opt.)",
+    dateClose:"Exit date (opt.)",strat:"Strategy",tags:"Tags (comma separated)",discipline:"Discipline / emotion",
+    mistakes:"Mistakes (tap to tag)",plan:"Plan / thesis",lesson:"Lesson learned",notes:"Notes",
+    screenshot:"Chart screenshot (opt.)",cancel:"Cancel",save:"Save",close:"Close",
+    cashflow:"Deposit / Withdrawal",type:"Type",deposit:"Deposit",withdraw:"Withdrawal",amount:"Amount",date:"Date",
+    posCalc:"Position size calculator",capital:"Capital",riskPct:"Risk (%)",
+    newAccount:"New account",accName:"Name",currency:"Currency",startBal:"Starting balance",
+    footer:"TradeLedger v1.0 · Your data stays on your device · A tracking tool, not financial advice.",
+    netPnl:"Net P&L",winRate:"Win rate",profitFactor:"Profit factor",expectancy:"Expectancy/trade",avgR:"Avg R",avgHold:"Avg hold",holdUnit:"d",ddCurve:"Drawdown curve",
+    trades:"trades",equity:"Equity curve",drawdown:"Drawdown",insights:"Your habits, analyzed",
+    avgWin:"Avg win",avgLoss:"Avg loss",bestTrade:"Best trade",worstTrade:"Worst trade",maxDD:"Max drawdown",
+    winStreak:"Win streak",lossStreak:"Loss streak",noData:"No data yet — add a trade.",
+    search:"Search…",allStrats:"All strategies",allSymbols:"All symbols",allDirs:"All directions",allResults:"All results",
+    won:"Winners",lost:"Losers",colDate:"Date",colSym:"Symbol",colDir:"Dir",colEntry:"Entry",colExit:"Exit",
+    colQty:"Qty",colR:"R",colStrat:"Strat.",colPnl:"P&L",edit:"Edit",duplicate:"Duplicate",del:"Delete",
+    bySymbol:"By symbol",byStrat:"By strategy",byDir:"By direction",byDay:"By weekday",bySession:"By session",
+    distribution:"Result distribution",monthly:"Monthly P&L",needHour:"Add entry time to your trades to unlock this view.",
+    balance:"Account balance",deposits:"Deposits/withdrawals",addCf:"+ Deposit/Withdraw",noCf:"No movements.",
+    settings:"Settings",theme:"Dark theme",lang:"Language",backup:"Backup",exportJson:"Export (JSON)",importJson:"Import (JSON)",
+    exportCsv:"Export CSV",importCsv:"Import CSV",calcOpen:"Position calculator",dangerZone:"Danger zone",walletTitle:"On-chain wallet (Phantom)",walletConnect:"Connect Phantom",walletDisconnect:"Disconnect",walletRefresh:"Refresh",walletConnected:"Connected",walletBalance:"Balance",walletNote:"Read-only: we only read your public address and balance. The app never asks for your secret phrase and never touches your funds. (Solana)",walletNotFound:"Phantom not detected. Install the Phantom extension, or open this page in the Phantom app's built-in browser.",walletError:"Balance unavailable right now (try again once deployed).",
+    resetAll:"Erase everything",manageAcct:"Accounts",addAcct:"+ Account",renameAcct:"Rename",delAcct:"Delete this account",
+    undo:"Undo",deleted:"Trade deleted",saved:"Saved",risk:"Risk",size:"Position size",shares:"units",
+    riskAmt:"Amount risked",rr:"R:R ratio",reward:"Potential reward",confirmReset:"Erase ALL data? Cannot be undone.",
+    confirmDelAcct:"Delete this account and all its trades?",notAdvice:"This tool only analyzes your history. It gives no advice and predicts nothing.",
+    csvImported:" trade(s) imported",csvSkippedTxt:" skipped",csvMissing:"Columns not found: ",csvConfirm:'Import {n} trade(s) into "{a}"?',
+    mLabels:["FOMO","Revenge trade","No stop","Too early","Too late","Plan broken","Overtrading"],
+    tabMental:"Mental",tabCoach:"Coach",checkinTitle:"Today's check-in",moodQ:"How do you feel today?",energyQ:"Energy",stressQ:"Stress",dayQ:"How was your day?",checkinSave:"Save my check-in",checkinDone:"Check-in saved",reflection:"A gentle reflection",moodTrend:"Recent mood",moodVsPnl:"Mindset vs results",calmDays:"Calm days",tenseDays:"Tense days",moodTags:"Today's words",wellbeingNote:"This check-in helps you track your mindset; it's not a substitute for medical advice. If you're going through a hard time, talk to someone you trust or a professional.",moodTagsArr:["Calm","Confident","Stressed","Tired","Distracted","Motivated","Frustrated","Focused"]},
+};
+var lang = "fr";
+function t(k){ return (T[lang] && T[lang][k]) || (T.fr[k]) || k; }
+var COACH = {
+  fr:{
+    coachTitle:"Coach Mindset",
+    profileTitle:"Ton profil de trader",
+    profileIntro:"5 questions pour cerner ta personnalité face au risque. Refaisable quand tu veux.",
+    readyTitle:"Suis-je prêt à trader aujourd'hui ?",
+    readyIntro:"Réponds honnêtement sur ton état du moment.",
+    analyze:"Analyser", retake:"Refaire le profil", lastVerdict:"Dernier verdict",
+    disclaimer:"Outil de réflexion personnelle — ni conseil financier, ni avis médical. C'est toi qui décides.",
+    labels:{low:"Prudent & discipliné", mid:"Équilibré", high:"Preneur de risque"},
+    profileQ:[
+      {q:"Face au risque, en général tu es…", o:[["Prudent",0],["Équilibré",1],["Preneur de risque",2]]},
+      {q:"Quand tu perds de l'argent…", o:[["Tu fais une pause et tu analyses",0],["Tu restes plutôt calme",1],["Tu veux te refaire tout de suite",2]]},
+      {q:"Tes décisions sont plutôt…", o:[["Planifiées",0],["Un mix",1],["Impulsives",2]]},
+      {q:"Sous stress, tu…", o:[["Te recentres",0],["Ça dépend",1],["Agis vite sans réfléchir",2]]},
+      {q:"Ton objectif principal…", o:[["Apprendre et progresser",0],["Un revenu régulier",1],["De gros gains rapides",2]]}
+    ],
+    readyQ:[
+      {q:"Ton sommeil cette nuit ?", o:[["Bon",0],["Moyen",1],["Mauvais",2]]},
+      {q:"Ton niveau de stress maintenant ?", o:[["Bas",0],["Moyen",1],["Élevé",2]]},
+      {q:"Ton humeur là, tout de suite ?", o:[["Positive",0],["Neutre",1],["Négative",2]]},
+      {q:"Envie de « te refaire » après une perte ?", o:[["Non",0],["Un peu",1],["Oui, beaucoup",2]]},
+      {q:"Es-tu pressé / impatient ?", o:[["Non",0],["Un peu",1],["Oui",2]]},
+      {q:"As-tu un plan clair pour aujourd'hui ?", o:[["Oui",0],["Vague",1],["Aucun",2]]}
+    ],
+    go:{t:"État d'esprit posé ✓", d:"Ton état semble stable. Tiens ton plan et garde ton risque habituel — pas besoin d'en faire plus."},
+    caution:{t:"Prudence aujourd'hui", d:"Quelques signaux d'alerte. Si tu trades : réduis la taille de tes positions, sois sélectif, accepte de faire moins."},
+    stop:{t:"Mieux vaut t'abstenir aujourd'hui", d:"Ton état augmente le risque de décisions impulsives. Le meilleur trade du jour est souvent de ne pas trader."},
+    distress:"Tu sembles traverser un moment difficile. Le trading peut attendre — souffle, et parle-en à quelqu'un de confiance si tu en ressens le besoin."
+  },
+  en:{
+    coachTitle:"Mindset Coach",
+    profileTitle:"Your trader profile",
+    profileIntro:"5 questions to map your personality toward risk. Retake anytime.",
+    readyTitle:"Am I ready to trade today?",
+    readyIntro:"Answer honestly about how you feel right now.",
+    analyze:"Analyze", retake:"Retake profile", lastVerdict:"Last verdict",
+    disclaimer:"A personal reflection tool — not financial or medical advice. You decide.",
+    labels:{low:"Cautious & disciplined", mid:"Balanced", high:"Risk-taker"},
+    profileQ:[
+      {q:"Toward risk, in general you are…", o:[["Cautious",0],["Balanced",1],["Risk-taker",2]]},
+      {q:"When you lose money…", o:[["You pause and analyze",0],["You stay fairly calm",1],["You want to win it back now",2]]},
+      {q:"Your decisions are mostly…", o:[["Planned",0],["A mix",1],["Impulsive",2]]},
+      {q:"Under stress, you…", o:[["Recenter yourself",0],["It depends",1],["Act fast without thinking",2]]},
+      {q:"Your main goal…", o:[["Learn and improve",0],["Steady income",1],["Big fast gains",2]]}
+    ],
+    readyQ:[
+      {q:"How did you sleep last night?", o:[["Well",0],["So-so",1],["Badly",2]]},
+      {q:"Your stress level right now?", o:[["Low",0],["Medium",1],["High",2]]},
+      {q:"Your mood right now?", o:[["Positive",0],["Neutral",1],["Negative",2]]},
+      {q:"Urge to win back a recent loss?", o:[["No",0],["A little",1],["Yes, a lot",2]]},
+      {q:"Are you rushed / impatient?", o:[["No",0],["A little",1],["Yes",2]]},
+      {q:"Do you have a clear plan for today?", o:[["Yes",0],["Vague",1],["None",2]]}
+    ],
+    go:{t:"Steady mindset ✓", d:"Your state looks stable. Stick to your plan and your usual risk — no need to do more."},
+    caution:{t:"Caution today", d:"A few warning signs. If you trade: reduce position size, be selective, accept doing less."},
+    stop:{t:"Better to sit out today", d:"Your state raises the risk of impulsive decisions. The best trade today is often not trading."},
+    distress:"You seem to be going through a tough moment. Trading can wait — take a breath, and talk to someone you trust if you need to."
+  }
+};
+function C(k){ return (COACH[lang]||COACH.fr)[k]; }
+var DEEP = {
+  fr:{
+    title:"Bilan Mindset complet",
+    intro:"~10 minutes. Réponds spontanément, sans trop réfléchir. À la fin : un bilan par dimension, tes forces, tes barrières à casser et des exercices adaptés.",
+    submit:"Voir mon bilan", resultTitle:"Ton bilan Mindset",
+    strong:"Tes forces", work:"À travailler — tes barrières à casser", exercises:"Exercices conseillés",
+    levels:["Fragile","À surveiller","Solide","Très solide"],
+    scale:["Pas du tout","Plutôt non","Moyen","Plutôt oui","Tout à fait"],
+    dimensions:[
+      {key:"emotion",name:"Régulation émotionnelle",q:["Je reste calme même quand le marché bouge violemment.","Mes émotions ne décident pas à ma place.","Je sens quand je suis trop tendu pour trader.","Après un coup dur, je me recentre vite."]},
+      {key:"discipline",name:"Discipline & règles",q:["Je suis mon plan même quand c'est tentant d'en dévier.","Je respecte mon risque max à chaque trade.","Je n'ouvre pas de position « au feeling ».","Quand mes critères ne sont pas réunis, je m'abstiens."]},
+      {key:"loss",name:"Rapport à la perte",q:["Une perte ne me pousse pas à me « refaire » tout de suite.","J'accepte qu'une perte fasse partie du métier.","Je coupe une position perdante sans lui « laisser une chance ».","Perdre ne remet pas en cause ma valeur personnelle."]},
+      {key:"patience",name:"Patience & FOMO",q:["Je n'ai pas peur de rater une opportunité.","Je sais attendre le bon setup sans m'ennuyer.","Je ne saute pas dans un trade juste parce que « ça bouge ».","Je préfère la qualité à la quantité de trades."]},
+      {key:"confidence",name:"Confiance & ego",q:["Ma confiance ne dépend pas de mon dernier trade.","Je ne deviens pas téméraire après une série de gains.","Je reconnais mes erreurs sans me dévaloriser.","Je ne cherche pas à « avoir raison » contre le marché."]},
+      {key:"focus",name:"Clarté & énergie",q:["J'ai assez dormi pour être lucide.","Je trade sans distractions autour de moi.","Mon esprit est clair, pas embrumé.","J'ai l'énergie pour rester concentré toute la séance."]}
+    ],
+    advice:{
+      emotion:{low:"Tes émotions prennent souvent le dessus. Pose un rituel de calme (respiration) avant de trader et une limite : si la tension monte, tu sors.",mid:"Tu gères, mais sous pression ça peut déraper. Un sas de respiration avant chaque séance solidifierait tout.",high:"Belle régulation émotionnelle — garde tes rituels, c'est une vraie force."},
+      discipline:{low:"La discipline est ton point faible n°1. Écris 3 règles simples et coche-les à chaque trade : la structure remplace la volonté.",mid:"Tu tiens tes règles la plupart du temps. Note ce qui te fait dévier pour verrouiller les écarts.",high:"Discipline solide — c'est ce qui sépare les traders rentables des autres."},
+      loss:{low:"La perte te touche fort et nourrit le revenge trading. Mets une règle d'arrêt après 2 pertes, et sépare ta valeur de tes résultats.",mid:"Tu encaisses correctement, mais certaines pertes restent en travers. Le recadrage écrit aide beaucoup.",high:"Tu as un rapport sain à la perte — rare et précieux."},
+      patience:{low:"Le FOMO te pousse à entrer trop tôt. Choisis 1 seul setup par séance et ignore le reste.",mid:"Plutôt patient, mais le marché qui bouge te tente encore. Le drill de patience renforcera ça.",high:"Patience exemplaire : tu attends, les autres se précipitent."},
+      confidence:{low:"Ta confiance fait du yo-yo selon tes résultats. Un journal factuel la basera sur ton process, pas sur le dernier trade.",mid:"Confiance globalement saine ; attention à l'excès après les séries gagnantes (pré-mortem conseillé).",high:"Confiance stable et lucide — ni ego, ni doute paralysant."},
+      focus:{low:"Fatigue et distractions sabotent tes décisions. Dors, range ton espace, fais un reset physique avant de trader.",mid:"Énergie correcte. Une routine pré-séance et moins d'écrans parasites te rendraient plus net.",high:"Tu arrives lucide et concentré — la base de bonnes décisions."}
+    },
+    barriers:{
+      emotion:"« Je dois ressentir l'excitation du marché. » → Les meilleures décisions sont froides.",
+      discipline:"« Cette fois c'est différent, je peux dévier. » → Le marché punit les exceptions.",
+      loss:"« Je dois me refaire maintenant. » → Le revenge trading est le piège n°1.",
+      patience:"« Si je n'entre pas, je rate tout. » → Il y aura toujours un autre trade.",
+      confidence:"« Je dois avoir raison. » → Tu n'as pas à avoir raison, juste à suivre ton plan.",
+      focus:"« Je peux trader fatigué, ça ira. » → Un cerveau fatigué prend des décisions chères."
+    },
+    exercises:[
+      {dim:["emotion"],name:"Respiration carrée (box breathing)",how:"Inspire 4s, retiens 4s, expire 4s, retiens 4s. 5 cycles avant de trader pour faire redescendre la tension."},
+      {dim:["emotion","focus"],name:"Ancrage 5-4-3-2-1",how:"Nomme 5 choses que tu vois, 4 que tu entends, 3 que tu touches, 2 que tu sens, 1 que tu goûtes. Recentre le mental en 1 min."},
+      {dim:["focus"],name:"Reset physique (étirements)",how:"Lève-toi, roule les épaules 10x, étire doucement la nuque à gauche/droite, secoue les mains. 60s pour relâcher la tension."},
+      {dim:["confidence"],name:"Pré-mortem",how:"Avant d'entrer : imagine que le trade a échoué. Pourquoi ? Si la raison est évitable, ajuste ou passe ton tour."},
+      {dim:["loss","discipline"],name:"Règle du stop émotionnel",how:"Après 2 pertes d'affilée, ferme l'app 30 min. La pause casse la spirale du revenge trading."},
+      {dim:["patience"],name:"Drill de patience",how:"Choisis 1 seul setup pour la séance. Tout le reste, tu l'ignores. La sélectivité bat la quantité."},
+      {dim:["emotion","loss"],name:"Recadrage d'une pensée",how:"Écris la pensée stressante (« je dois me refaire »), puis réécris-la en version utile (« une perte fait partie du jeu, je suis mon plan »)."},
+      {dim:["discipline","focus"],name:"Routine pré-séance",how:"3 lignes avant de trader : ma thèse du jour, mon risque max, ce qui me ferait arrêter. Relis-les avant chaque trade."},
+      {dim:["confidence","patience"],name:"Journal de 2 minutes",how:"Après la séance : 1 chose bien jouée, 1 erreur, 1 ajustement pour demain. Sans te juger."},
+      {dim:["emotion","focus"],name:"Décompression",how:"Hors trading : marche 10 min sans écran ou respire en pleine conscience. Le mental se régénère loin des graphes."}
+    ]
+  },
+  en:{
+    title:"Full Mindset assessment",
+    intro:"~10 minutes. Answer spontaneously. At the end: a per-dimension report, your strengths, barriers to break and tailored exercises.",
+    submit:"See my report", resultTitle:"Your Mindset report",
+    strong:"Your strengths", work:"To work on — barriers to break", exercises:"Recommended exercises",
+    levels:["Fragile","Watch out","Solid","Very solid"],
+    scale:["Not at all","Rather no","Medium","Rather yes","Totally"],
+    dimensions:[
+      {key:"emotion",name:"Emotional regulation",q:["I stay calm even when the market moves violently.","My emotions don't decide for me.","I notice when I'm too tense to trade.","After a hard hit, I recenter quickly."]},
+      {key:"discipline",name:"Discipline & rules",q:["I follow my plan even when it's tempting to deviate.","I respect my max risk on every trade.","I don't open positions on a whim.","When my criteria aren't met, I stay out."]},
+      {key:"loss",name:"Relationship with losses",q:["A loss doesn't push me to win it back right away.","I accept that losing is part of the job.","I cut a losing position without giving it 'a chance'.","Losing doesn't question my self-worth."]},
+      {key:"patience",name:"Patience & FOMO",q:["I'm not afraid of missing an opportunity.","I can wait for the right setup without getting bored.","I don't jump in just because 'it's moving'.","I prefer quality over quantity of trades."]},
+      {key:"confidence",name:"Confidence & ego",q:["My confidence doesn't depend on my last trade.","I don't get reckless after a winning streak.","I admit my mistakes without putting myself down.","I don't try to 'be right' against the market."]},
+      {key:"focus",name:"Clarity & energy",q:["I slept enough to be sharp.","I trade without distractions around me.","My mind is clear, not foggy.","I have the energy to stay focused all session."]}
+    ],
+    advice:{
+      emotion:{low:"Emotions often take over. Set a calming ritual (breathing) before trading and a limit: if tension rises, you step out.",mid:"You cope, but it can slip under pressure. A breathing buffer before each session would lock it in.",high:"Great emotional regulation — keep your rituals, it's a real strength."},
+      discipline:{low:"Discipline is your #1 weak point. Write 3 simple rules and tick them each trade: structure beats willpower.",mid:"You keep your rules most of the time. Note what makes you deviate to lock the gaps.",high:"Solid discipline — it's what separates profitable traders from the rest."},
+      loss:{low:"Losses hit you hard and feed revenge trading. Set a stop rule after 2 losses, and separate your worth from your results.",mid:"You handle it okay, but some losses stick. Written reframing helps a lot.",high:"You have a healthy relationship with losses — rare and precious."},
+      patience:{low:"FOMO pushes you to enter too early. Pick one setup per session and ignore the rest.",mid:"Fairly patient, but a moving market still tempts you. The patience drill will reinforce it.",high:"Exemplary patience: you wait while others rush."},
+      confidence:{low:"Your confidence yo-yos with results. A factual journal bases it on your process, not the last trade.",mid:"Mostly healthy confidence; watch for excess after winning streaks (try a pre-mortem).",high:"Stable, clear confidence — neither ego nor paralyzing doubt."},
+      focus:{low:"Fatigue and distractions sabotage your decisions. Sleep, tidy your space, do a physical reset before trading.",mid:"Decent energy. A pre-session routine and fewer distractions would sharpen you.",high:"You show up clear and focused — the basis of good decisions."}
+    },
+    barriers:{
+      emotion:"\"I need to feel the market's excitement.\" → The best decisions are cold.",
+      discipline:"\"This time is different, I can deviate.\" → The market punishes exceptions.",
+      loss:"\"I have to win it back now.\" → Revenge trading is the #1 trap.",
+      patience:"\"If I don't enter, I'll miss everything.\" → There's always another trade.",
+      confidence:"\"I have to be right.\" → You don't need to be right, just to follow your plan.",
+      focus:"\"I can trade tired, it'll be fine.\" → A tired brain makes expensive decisions."
+    },
+    exercises:[
+      {dim:["emotion"],name:"Box breathing",how:"Inhale 4s, hold 4s, exhale 4s, hold 4s. 5 cycles before trading to bring tension down."},
+      {dim:["emotion","focus"],name:"5-4-3-2-1 grounding",how:"Name 5 things you see, 4 you hear, 3 you touch, 2 you smell, 1 you taste. Recenters the mind in 1 min."},
+      {dim:["focus"],name:"Physical reset (stretches)",how:"Stand up, roll shoulders 10x, gently stretch your neck side to side, shake your hands. 60s to release tension."},
+      {dim:["confidence"],name:"Pre-mortem",how:"Before entering: imagine the trade failed. Why? If the reason is avoidable, adjust or skip."},
+      {dim:["loss","discipline"],name:"Emotional stop rule",how:"After 2 losses in a row, close the app for 30 min. The pause breaks the revenge spiral."},
+      {dim:["patience"],name:"Patience drill",how:"Pick one setup for the session. Ignore everything else. Selectivity beats quantity."},
+      {dim:["emotion","loss"],name:"Thought reframing",how:"Write the stressful thought (\"I must win it back\"), then rewrite it usefully (\"a loss is part of the game, I follow my plan\")."},
+      {dim:["discipline","focus"],name:"Pre-session routine",how:"3 lines before trading: today's thesis, my max risk, what would make me stop. Reread before each trade."},
+      {dim:["confidence","patience"],name:"2-minute journal",how:"After the session: 1 thing done well, 1 mistake, 1 adjustment for tomorrow. No self-judgment."},
+      {dim:["emotion","focus"],name:"Decompression",how:"Off-trading: a 10-min screen-free walk or mindful breathing. The mind recovers away from charts."}
+    ]
+  }
+};
+function D(k){ return (DEEP[lang]||DEEP.fr)[k]; }
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent = t(el.getAttribute("data-i18n")); });
+  document.documentElement.lang = lang;
+  document.getElementById("langBtn").textContent = lang.toUpperCase();
+}
+
+/* ============================= State ============================= */
+var KEY = "tradeledger_v2";
+var state = { accounts:[], activeId:null, cashflows:[], settings:{theme:"dark"} };
+var DOW = { fr:["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"], en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] };
+
+function load(){
+  try{ var raw = localStorage.getItem(KEY); if(raw){ state = JSON.parse(raw); return true; } }catch(e){}
+  return false;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ toast("⚠ Stockage plein ou indisponible", null, null); }
+}
+function curAccount(){ return state.accounts.find(function(a){return a.id===state.activeId;}) || state.accounts[0]; }
+function curSymbol(){ var a=curAccount(); return a?a.currency:"€"; }
+function curTrades(){ var a=curAccount(); return a?a.trades:[]; }
+
+/* ===CALC_START=== (fonctions pures, testées hors-DOM) */
+function pnlOf(tr){ var d = tr.dir==="long" ? (tr.exit-tr.entry) : (tr.entry-tr.exit); return d*tr.qty - (tr.fees||0); }
+function riskOf(tr){ if(tr.stop==null||tr.stop===""||isNaN(tr.stop)) return null; var r=Math.abs(tr.entry-tr.stop)*tr.qty; return r>0?r:null; }
+function rMultiple(tr){ var r=riskOf(tr); return r? pnlOf(tr)/r : null; }
+function plannedRR(tr){ if(tr.stop==null||tr.target==null||isNaN(tr.stop)||isNaN(tr.target)) return null; var risk=Math.abs(tr.entry-tr.stop), rew=Math.abs(tr.target-tr.entry); return risk>0?rew/risk:null; }
+function tradeDate(tr){ return tr.dateClose || tr.dateOpen || ""; }
+function holdDays(tr){ if(!tr.dateOpen||!tr.dateClose) return null; var a=new Date(tr.dateOpen),b=new Date(tr.dateClose); var d=(b-a)/86400000; return isNaN(d)?null:d; }
+function sessionOf(h){ if(h==null) return null; if(h<7) return "Asie"; if(h<13) return "Londres"; if(h<21) return "New York"; return "Asie"; }
+function hourOf(tr){ if(!tr.timeOpen) return null; var p=tr.timeOpen.split(":"); var h=parseInt(p[0],10); return isNaN(h)?null:h; }
+
+function computeStats(trades){
+  var s={count:trades.length,net:0,wins:0,losses:0,gp:0,gl:0,best:0,worst:0,rs:[],holds:[]};
+  trades.forEach(function(tr){
+    var p=pnlOf(tr); s.net+=p;
+    if(p>0){s.wins++;s.gp+=p;} else if(p<0){s.losses++;s.gl+=Math.abs(p);}
+    if(p>s.best)s.best=p; if(p<s.worst)s.worst=p;
+    var r=rMultiple(tr); if(r!=null)s.rs.push(r);
+    var h=holdDays(tr); if(h!=null)s.holds.push(h);
+  });
+  s.winRate = s.count? s.wins/s.count*100 : 0;
+  s.pf = s.gl>0 ? s.gp/s.gl : (s.gp>0?Infinity:0);
+  s.avgWin = s.wins? s.gp/s.wins : 0;
+  s.avgLoss = s.losses? s.gl/s.losses : 0;
+  s.expectancy = s.count? s.net/s.count : 0;
+  s.avgR = s.rs.length? s.rs.reduce(function(a,b){return a+b;},0)/s.rs.length : null;
+  s.avgHold = s.holds.length? s.holds.reduce(function(a,b){return a+b;},0)/s.holds.length : null;
+  // streaks (chronologique)
+  var ord=trades.slice().sort(function(a,b){return tradeDate(a).localeCompare(tradeDate(b))||a.id-b.id;});
+  var ws=0,ls=0,mw=0,ml=0;
+  ord.forEach(function(tr){var p=pnlOf(tr); if(p>0){ws++;ls=0;if(ws>mw)mw=ws;} else if(p<0){ls++;ws=0;if(ls>ml)ml=ls;}});
+  s.maxWin=mw; s.maxLoss=ml;
+  return s;
+}
+function equitySeries(trades){
+  var ord=trades.slice().sort(function(a,b){return tradeDate(a).localeCompare(tradeDate(b))||a.id-b.id;});
+  var cum=0,pts=[0]; ord.forEach(function(tr){cum+=pnlOf(tr);pts.push(cum);}); return pts;
+}
+function maxDrawdown(pts){
+  var peak=pts[0],mdd=0;
+  pts.forEach(function(v){ if(v>peak)peak=v; var dd=peak-v; if(dd>mdd)mdd=dd; });
+  return mdd;
+}
+function segment(trades,keyFn){
+  var m={};
+  trades.forEach(function(tr){ var k=keyFn(tr); if(k==null||k==="")return; if(!m[k])m[k]={net:0,count:0,wins:0}; var p=pnlOf(tr); m[k].net+=p; m[k].count++; if(p>0)m[k].wins++; });
+  return Object.keys(m).map(function(k){return {name:k,net:m[k].net,count:m[k].count,winRate:m[k].wins/m[k].count*100};});
+}
+function histogram(trades,bins){
+  var ps=trades.map(pnlOf); if(!ps.length)return null;
+  var mn=Math.min.apply(null,ps),mx=Math.max.apply(null,ps); if(mn===mx){mn-=1;mx+=1;}
+  var w=(mx-mn)/bins,counts=new Array(bins).fill(0);
+  ps.forEach(function(p){var i=Math.min(bins-1,Math.floor((p-mn)/w));counts[i]++;});
+  return {counts:counts,min:mn,width:w};
+}
+function accountBalance(acct,cashflows){
+  var b=acct.startBalance||0;
+  acct.trades.forEach(function(tr){b+=pnlOf(tr);});
+  cashflows.filter(function(c){return c.accountId===acct.id;}).forEach(function(c){b+= c.type==="deposit"? c.amount : -c.amount;});
+  return b;
+}
+function segmentMulti(trades,field){
+  var m={};
+  trades.forEach(function(tr){ (tr[field]||[]).forEach(function(k){ if(k==null||k==="")return; if(!m[k])m[k]={net:0,count:0,wins:0}; var p=pnlOf(tr); m[k].net+=p;m[k].count++; if(p>0)m[k].wins++; }); });
+  return Object.keys(m).map(function(k){return {name:k,net:m[k].net,count:m[k].count,winRate:m[k].wins/m[k].count*100};});
+}
+function coachProfile(ans){ var s=ans.reduce(function(a,b){return a+b;},0); return s<=3?"low":(s<=6?"mid":"high"); }
+function coachVerdict(ans, profileRisk){
+  var sum=ans.reduce(function(a,b){return a+b;},0);
+  if(profileRisk==="high")sum+=1; else if(profileRisk==="low")sum-=1;
+  var v = sum<=3?"go":(sum<=7?"caution":"stop");
+  if(ans[3]===2) v="stop";                                  // forte envie de se "refaire" => s'abstenir
+  else if(ans[1]===2 && ans[2]===2 && v==="go") v="caution"; // stress haut + humeur basse
+  if(ans[0]===2 && ans[1]===2 && ans[2]===2) v="stop";       // mauvais sommeil + stress + humeur
+  var distress = (ans[2]===2 && ans[1]===2);
+  return {sum:sum, verdict:v, distress:distress};
+}
+function deepScore(ans, perDim){
+  var dims=Math.round(ans.length/perDim), out=[];
+  for(var di=0; di<dims; di++){ var s=0; for(var j=0;j<perDim;j++){ var v=ans[di*perDim+j]; s+=(v==null?2:v); } out.push(Math.round(s/(perDim*4)*100)); }
+  return out;
+}
+function deepBand(score){ return score<40?"low":(score<=70?"mid":"high"); }
+function deepLevel(overall){ return overall<40?0:(overall<60?1:(overall<80?2:3)); }
+/* ===CALC_END=== */
+
+/* ===CSV_START=== (parsing pur, testé hors-DOM) */
+function csvParseNum(v){
+  if(v==null) return null; var s=String(v).trim(); if(s==="") return null;
+  s=s.replace(/[\s\u00a0]/g,"").replace(/[^\d.,\-]/g,"");
+  if(s===""||s==="-") return null;
+  var hasDot=s.indexOf(".")>=0, hasComma=s.indexOf(",")>=0;
+  if(hasDot&&hasComma){
+    if(s.lastIndexOf(",")>s.lastIndexOf(".")) s=s.replace(/\./g,"").replace(",",".");
+    else s=s.replace(/,/g,"");
+  } else if(hasComma){
+    var parts=s.split(",");
+    if(parts.length===2 && parts[1].length===3 && parts[0].replace("-","").length<=3) s=s.replace(",","");
+    else if(parts.length===2) s=s.replace(",",".");
+    else s=s.replace(/,/g,"");
+  }
+  var n=parseFloat(s); return isNaN(n)?null:n;
+}
+function csvParseDir(v){
+  if(!v) return "long"; var s=String(v).toLowerCase().trim();
+  if(/sell|short|vente|^s/.test(s)) return "short";
+  return "long";
+}
+function csvParseDateTime(v){
+  if(!v) return {date:null,time:null}; var s=String(v).trim(); if(!s) return {date:null,time:null};
+  var time=null; var tm=s.match(/(\d{1,2}):(\d{2})/); if(tm) time=("0"+tm[1]).slice(-2)+":"+tm[2];
+  var d=null; var iso=s.match(/(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if(iso){ d=iso[1]+"-"+("0"+iso[2]).slice(-2)+"-"+("0"+iso[3]).slice(-2); }
+  else { var dmy=s.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);
+    if(dmy){ var dd=parseInt(dmy[1],10),mm=parseInt(dmy[2],10),yy=dmy[3]; if(yy.length===2)yy="20"+yy;
+      if(mm>12&&dd<=12){var tmp=dd;dd=mm;mm=tmp;}
+      d=yy+"-"+("0"+mm).slice(-2)+"-"+("0"+dd).slice(-2); } }
+  return {date:d,time:time};
+}
+function csvNorm(h){ return String(h||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,""); }
+var CSV_ALIASES={
+  symbol:["symbol","symbole","actif","instrument","ticker","pair","market","paire"],
+  dir:["dir","side","sens","direction","type","buysell","bs"],
+  entry:["entry","entryprice","openprice","open","prixentree","pricein","priceopen","entree","prixdentree"],
+  exit:["exit","exitprice","closeprice","close","prixsortie","priceout","priceclose","sortie","prixdesortie"],
+  qty:["qty","quantity","size","volume","lots","lot","quantite","units","shares"],
+  fees:["fees","fee","commission","commissions","frais"],
+  stop:["stop","sl","stoploss"],
+  target:["target","tp","takeprofit","objectif"],
+  dateOpen:["dateopen","opentime","opendate","dateentree","opened","date","time","datetime","entrytime","dateetheure"],
+  dateClose:["dateclose","closetime","closedate","datesortie","closed","exittime"],
+  strat:["strat","strategy","strategie","setup"],
+  tags:["tags","tag"],
+  notes:["notes","note","comment","comments","commentaire","commentaires"]
+};
+function csvHeaderMap(headers){
+  var norm=headers.map(function(h){return {raw:h,n:csvNorm(h)};}); var map={};
+  Object.keys(CSV_ALIASES).forEach(function(field){
+    var aliases=CSV_ALIASES[field];
+    // exact
+    for(var i=0;i<norm.length;i++){ if(aliases.indexOf(norm[i].n)>=0){map[field]=norm[i].raw;return;} }
+    // contains (distinctif)
+    for(var j=0;j<norm.length;j++){ for(var k=0;k<aliases.length;k++){ var a=aliases[k];
+      if(a.length>=4 && (norm[j].n.indexOf(a)>=0)){ map[field]=norm[j].raw; return; } } }
+  });
+  return map;
+}
+function csvRowToTrade(row,map){
+  var entry=csvParseNum(row[map.entry]), exit=csvParseNum(row[map.exit]), qty=csvParseNum(row[map.qty]);
+  var symbol=(row[map.symbol]||"").trim();
+  if(!symbol||entry==null||exit==null||qty==null||qty===0) return null;
+  var dOpen=csvParseDateTime(row[map.dateOpen]); var dClose=csvParseDateTime(row[map.dateClose]);
+  var tagsRaw=(row[map.tags]||""); var tags=tagsRaw?tagsRaw.split(/[;|,]/).map(function(s){return s.trim();}).filter(Boolean):[];
+  return { symbol:symbol, dir:csvParseDir(row[map.dir]), entry:entry, exit:exit, qty:Math.abs(qty),
+    fees:csvParseNum(row[map.fees])||0, stop:csvParseNum(row[map.stop]), target:csvParseNum(row[map.target]),
+    dateOpen:dOpen.date||(dClose.date||null), timeOpen:dOpen.time||null, dateClose:dClose.date||null,
+    strat:(row[map.strat]||"").trim(), tags:tags, emotion:0, mistakes:[], plan:"", lesson:"",
+    notes:(row[map.notes]||"").trim(), screenshot:null };
+}
+function csvParse(text){
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim()!=="";});
+  if(!lines.length) return {headers:[],rows:[]};
+  var delim=(lines[0].split(";").length>lines[0].split(",").length)?";":",";
+  function splitLine(line){var out=[],cur="",q=false;
+    for(var i=0;i<line.length;i++){var c=line[i];
+      if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+      else { if(c==='"')q=true; else if(c===delim){out.push(cur);cur="";} else cur+=c; } }
+    out.push(cur); return out.map(function(s){return s.trim();}); }
+  var headers=splitLine(lines[0]); var rows=[];
+  for(var i=1;i<lines.length;i++){ var cells=splitLine(lines[i]); var o={};
+    headers.forEach(function(h,j){o[h]=cells[j]!=null?cells[j]:"";}); rows.push(o); }
+  return {headers:headers,rows:rows};
+}
+function csvImportTrades(text){
+  var parsed=csvParse(text); if(!parsed.headers.length) return {error:"empty"};
+  var map=csvHeaderMap(parsed.headers);
+  var missing=["symbol","entry","exit","qty"].filter(function(f){return !map[f];});
+  if(missing.length) return {error:"missing",missing:missing,headers:parsed.headers};
+  var trades=[],skipped=0;
+  parsed.rows.forEach(function(r){ var tr=csvRowToTrade(r,map); if(tr)trades.push(tr); else skipped++; });
+  return {trades:trades,skipped:skipped,map:map};
+}
+/* ===CSV_END=== */
+
+/* ============================= Formatting ============================= */
+function fmtMoney(n,withSign){
+  var sign = n<0?"−":(withSign?"+":"");
+  return sign + curSymbol() + Math.abs(n).toLocaleString(lang==="fr"?"fr-FR":"en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+/* ============================= Filters / sort state ============================= */
+var filters = { q:"", strat:"", symbol:"", dir:"", result:"", tag:"" };
+var sortKey = "date", sortDir = -1;
+var period = "all";
+function inPeriod(ds){
+  if(period==="all") return true; if(!ds) return false;
+  var d=new Date(ds), now=new Date();
+  if(period==="month") return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+  if(period==="year") return d.getFullYear()===now.getFullYear();
+  var days=period==="30"?30:90; var cutoff=new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate()-days);
+  return d>=cutoff;
+}
+function scope(trades){ return trades.filter(function(tr){return inPeriod(tradeDate(tr));}); }
+function periodBar(showShare){
+  var opts=[["all",t("pAll")],["30",t("p30")],["90",t("p90")],["month",t("pMonth")],["year",t("pYear")]];
+  return '<div class="filters" style="margin-bottom:14px"><select id="periodSel" style="max-width:220px">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(period===o[0]?" selected":"")+'>'+t("periodLabel")+" · "+o[1]+'</option>';}).join("")+'</select>'+(showShare?'<button class="btn-ghost btn-sm" id="recapBtn">'+t("recapShare")+'</button>':'')+'</div>';
+}
+function bindPeriod(){ var s=document.getElementById("periodSel"); if(s)s.addEventListener("change",function(){period=s.value;renderActive();}); }
+
+function filteredTrades(){
+  var list = curTrades().slice();
+  if(filters.q){ var q=filters.q.toLowerCase(); list=list.filter(function(tr){ return (tr.symbol||"").toLowerCase().indexOf(q)>=0 || (tr.strat||"").toLowerCase().indexOf(q)>=0 || (tr.tags||[]).join(" ").toLowerCase().indexOf(q)>=0 || (tr.notes||"").toLowerCase().indexOf(q)>=0; }); }
+  if(filters.strat) list=list.filter(function(tr){return tr.strat===filters.strat;});
+  if(filters.tag) list=list.filter(function(tr){return (tr.tags||[]).indexOf(filters.tag)>=0;});
+  if(filters.symbol) list=list.filter(function(tr){return tr.symbol===filters.symbol;});
+  if(filters.dir) list=list.filter(function(tr){return tr.dir===filters.dir;});
+  if(filters.result==="won") list=list.filter(function(tr){return pnlOf(tr)>0;});
+  if(filters.result==="lost") list=list.filter(function(tr){return pnlOf(tr)<0;});
+  list.sort(function(a,b){
+    var av,bv;
+    switch(sortKey){
+      case "symbol": av=a.symbol||"";bv=b.symbol||"";break;
+      case "pnl": av=pnlOf(a);bv=pnlOf(b);break;
+      case "r": av=rMultiple(a)||-999;bv=rMultiple(b)||-999;break;
+      case "qty": av=a.qty;bv=b.qty;break;
+      default: av=tradeDate(a);bv=tradeDate(b);
+    }
+    if(av<bv)return -1*sortDir; if(av>bv)return 1*sortDir; return (a.id-b.id)*sortDir;
+  });
+  return list;
+}
+
+/* ============================= Renderers ============================= */
+function statCard(label,val,cls,sub,info){ var open = info ? '<div class="stat row-click" data-info="'+esc(info)+'">' : '<div class="stat">'; return open+'<div class="label">'+label+'</div><div class="val '+(cls||"")+'">'+val+'</div>'+(sub?'<div class="sub">'+sub+'</div>':'')+'</div>'; }
+
+function tabIntro(k){ return '<div class="tab-intro">'+t(k)+'</div>'; }
+function renderDashboard(){
+  var tr=scope(curTrades()), s=computeStats(tr); var fr=lang==="fr";
+  var html=tabIntro("introDash")+periodBar(true)+'<div class="stats">'+
+    statCard(t("netPnl"),fmtMoney(s.net,true),s.net>=0?"pos":"neg",s.count+" "+t("trades"),fr?"Ton gain ou ta perte total, frais déduits.":"Your total profit or loss, fees included.")+
+    statCard(t("winRate"),s.winRate.toFixed(0)+"%",s.winRate>=50?"pos":"",s.wins+"W / "+s.losses+"L",fr?"Le pourcentage de tes trades qui sont gagnants.":"The percentage of your trades that win.")+
+    statCard(t("profitFactor"),s.pf===Infinity?"∞":s.pf.toFixed(2),s.pf>=1?"pos":"neg",null,fr?"Total gagné ÷ total perdu. Au-dessus de 1, tu es profitable.":"Total won ÷ total lost. Above 1 means profitable.")+
+    statCard(t("expectancy"),fmtMoney(s.expectancy,true),s.expectancy>=0?"pos":"neg",null,fr?"Ce que tu gagnes en moyenne par trade.":"What you earn on average per trade.")+
+    statCard(t("avgR"),s.avgR==null?"—":(s.avgR>=0?"+":"")+s.avgR.toFixed(2)+"R",s.avgR!=null&&s.avgR>=0?"pos":(s.avgR!=null?"neg":""),null,fr?"Ton gain moyen rapporté au risque pris (nécessite un stop).":"Your average gain relative to the risk taken (needs a stop).")+
+    '</div>';
+  if(state.settings.demo){ html = '<div class="banner"><span>'+t("demoBanner")+'</span><button class="btn-primary btn-sm" id="freshBtn">'+t("startFresh")+'</button></div>' + html; }
+  var dl=state.settings.dailyLossLimit;
+  if(dl){ var tdy=new Date().toISOString().slice(0,10); var tnet=curTrades().filter(function(x){return tradeDate(x)===tdy;}).reduce(function(a,x){return a+pnlOf(x);},0);
+    if(tnet<=-dl){ html='<div class="banner" style="border-color:rgba(255,93,93,.4);background:linear-gradient(180deg,rgba(255,93,93,.13),rgba(255,93,93,.04))"><span>'+t("lossHit")+'</span></div>'+html; } }
+  var goal=state.settings.goal;
+  if(goal){ var n0=new Date(); var mNet=curTrades().filter(function(x){var d=tradeDate(x);if(!d)return false;var dt=new Date(d);return dt.getFullYear()===n0.getFullYear()&&dt.getMonth()===n0.getMonth();}).reduce(function(a,x){return a+pnlOf(x);},0);
+    var gpct=Math.max(0,Math.min(100, goal>0?mNet/goal*100:0));
+    html+='<div class="card"><h2>'+t("goalTitle")+'</h2><div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px"><span class="'+(mNet>=0?"pos":"neg")+'">'+fmtMoney(mNet,true)+'</span><span class="muted">'+t("ofGoal")+' '+fmtMoney(goal)+'</span></div><div class="goal-bar"><div class="goal-fill" style="width:'+gpct+'%"></div></div></div>';
+  }
+  html+='<div class="card"><h2>'+t("equity")+'</h2><canvas id="eqCanvas" height="200"></canvas></div>';
+  html+='<div class="card"><h2>'+t("insights")+'</h2><div id="insightsBox"></div><div class="hint">'+t("notAdvice")+'</div></div>';
+  document.getElementById("tab-dashboard").innerHTML=html;
+  drawEquity(document.getElementById("eqCanvas"),tr);
+  renderInsights(document.getElementById("insightsBox"),tr);
+  bindPeriod();
+  bind("freshBtn","click",function(){ confirmModal(t("confirmFresh"),freshStart); });
+  document.querySelectorAll("#tab-dashboard [data-info]").forEach(function(c){c.addEventListener("click",function(){notify(c.getAttribute("data-info"));});});
+  bind("recapBtn","click",openRecap);
+}
+
+function drawEquity(canvas,trades){
+  if(!canvas)return;
+  var ratio=window.devicePixelRatio||1, W=canvas.clientWidth, H=200;
+  canvas.width=W*ratio; canvas.height=H*ratio; var ctx=canvas.getContext("2d"); ctx.scale(ratio,ratio); ctx.clearRect(0,0,W,H);
+  var css=getComputedStyle(document.documentElement);
+  var pts=equitySeries(trades);
+  if(pts.length<2){ ctx.fillStyle=css.getPropertyValue("--muted"); ctx.font="13px IBM Plex Mono,monospace"; ctx.textAlign="center"; ctx.fillText(t("noData"),W/2,H/2); return; }
+  var mn=Math.min.apply(null,pts),mx=Math.max.apply(null,pts); if(mn===mx){mn-=1;mx+=1;}
+  var pl=8,pr=8,pt=14,pb=14,pw=W-pl-pr,ph=H-pt-pb;
+  function x(i){return pl+(i/(pts.length-1))*pw;} function y(v){return pt+ph-((v-mn)/(mx-mn))*ph;}
+  if(mn<0&&mx>0){ctx.strokeStyle=css.getPropertyValue("--line");ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pl,y(0));ctx.lineTo(W-pr,y(0));ctx.stroke();ctx.setLineDash([]);}
+  var end=pts[pts.length-1]>=0;
+  var grad=ctx.createLinearGradient(0,pt,0,H);
+  grad.addColorStop(0,end?"rgba(38,208,124,.28)":"rgba(255,93,93,.25)"); grad.addColorStop(1,"rgba(38,208,124,0)");
+  ctx.beginPath();ctx.moveTo(x(0),y(pts[0]));pts.forEach(function(v,i){ctx.lineTo(x(i),y(v));});
+  ctx.lineTo(x(pts.length-1),H-pb);ctx.lineTo(x(0),H-pb);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.moveTo(x(0),y(pts[0]));pts.forEach(function(v,i){ctx.lineTo(x(i),y(v));});
+  ctx.strokeStyle=end?"#26d07c":"#ff5d5d";ctx.lineWidth=2.4;ctx.lineJoin="round";ctx.stroke();
+  ctx.beginPath();ctx.arc(x(pts.length-1),y(pts[pts.length-1]),4,0,Math.PI*2);ctx.fillStyle=end?"#26d07c":"#ff5d5d";ctx.fill();
+}
+
+function renderInsights(box,trades){
+  if(trades.length<3){ box.innerHTML='<div class="hint">'+t("noData")+'</div>'; return; }
+  var out=[], s=computeStats(trades);
+  // best weekday
+  var byDay=segment(trades,function(tr){var d=tradeDate(tr);return d?DOW[lang][new Date(d).getDay()]:null;});
+  if(byDay.length>=2){ byDay.sort(function(a,b){return b.net-a.net;}); var bd=byDay[0],wd=byDay[byDay.length-1];
+    out.push(["good", lang==="fr"?("Ton meilleur jour est "+bd.name+" ("+fmtMoney(bd.net,true)+"). Le moins bon : "+wd.name+" ("+fmtMoney(wd.net,true)+")."):("Your best day is "+bd.name+" ("+fmtMoney(bd.net,true)+"). Weakest: "+wd.name+" ("+fmtMoney(wd.net,true)+").")]); }
+  // hour/session
+  var hasHour=trades.some(function(tr){return hourOf(tr)!=null;});
+  if(hasHour){ var bySess=segment(trades.filter(function(tr){return hourOf(tr)!=null;}),function(tr){return sessionOf(hourOf(tr));});
+    if(bySess.length){ bySess.sort(function(a,b){return b.winRate-a.winRate;}); var bs=bySess[0];
+      out.push(["good", lang==="fr"?("Sur la session "+bs.name+", ton taux de réussite est de "+bs.winRate.toFixed(0)+"%."):("During the "+bs.name+" session, your win rate is "+bs.winRate.toFixed(0)+"%.")]); } }
+  // discipline correlation
+  var hi=trades.filter(function(tr){return (tr.emotion||0)>=4;}), lo=trades.filter(function(tr){return tr.emotion&&tr.emotion<=2;});
+  if(hi.length>=2&&lo.length>=2){ var hn=computeStats(hi).expectancy, ln=computeStats(lo).expectancy;
+    out.push([hn>ln?"good":"warn", lang==="fr"?("Quand ta discipline est haute, tu gagnes "+fmtMoney(hn,true)+"/trade ; quand elle est basse, "+fmtMoney(ln,true)+"/trade."):("High discipline: "+fmtMoney(hn,true)+"/trade; low discipline: "+fmtMoney(ln,true)+"/trade.")]); }
+  // mistake tag correlation
+  var ml=T[lang].mLabels;
+  ["FOMO","Revenge trade"].forEach(function(tag){
+    var withTag=trades.filter(function(tr){return (tr.mistakes||[]).indexOf(tag)>=0 || (tr.mistakes||[]).indexOf(ml[tag==="FOMO"?0:1])>=0;});
+    if(withTag.length>=2){ var st=computeStats(withTag);
+      out.push(["warn", lang==="fr"?("Tes trades marqués «"+tag+"» : "+st.winRate.toFixed(0)+"% de réussite, "+fmtMoney(st.net,true)+" au total."):("Trades tagged \""+tag+"\": "+st.winRate.toFixed(0)+"% win rate, "+fmtMoney(st.net,true)+" total.")]); }
+  });
+  // rule adherence
+  var _rules=state.settings.rules||[];
+  if(_rules.length){
+    var allF=trades.filter(function(tr){return (tr.rulesFollowed||[]).length===_rules.length;});
+    var notF=trades.filter(function(tr){return (tr.rulesFollowed||[]).length<_rules.length;});
+    if(allF.length>=2&&notF.length>=2){ var ef=computeStats(allF).expectancy, nf=computeStats(notF).expectancy;
+      out.push([ef>nf?"good":"warn", lang==="fr"?("Quand tu respectes toutes tes règles, tu gagnes "+fmtMoney(ef,true)+"/trade ; sinon "+fmtMoney(nf,true)+"/trade."):("When you follow all your rules you make "+fmtMoney(ef,true)+"/trade; otherwise "+fmtMoney(nf,true)+"/trade.")]); }
+  }
+  // streak
+  if(s.maxLoss>=3) out.push(["warn", lang==="fr"?("Ta plus longue série perdante a été de "+s.maxLoss+" trades d'affilée."):("Your longest losing streak was "+s.maxLoss+" trades in a row.")]);
+  if(s.avgR!=null) out.push([s.avgR>=0?"good":"warn", lang==="fr"?("En moyenne tu gagnes "+s.avgR.toFixed(2)+"R par trade (sur les trades avec stop)."):("On average you make "+s.avgR.toFixed(2)+"R per trade (trades with a stop).")]);
+  if(!out.length){ box.innerHTML='<div class="hint">'+t("noData")+'</div>'; return; }
+  box.innerHTML = out.map(function(o){return '<div class="insight '+o[0]+'"><span class="dot"></span><span>'+esc(o[1])+'</span></div>';}).join("");
+}
+
+function posPnl(p){ if(p.mark==null||isNaN(p.mark)) return null; var diff=p.dir==="long"?(p.mark-p.entry):(p.entry-p.mark); return diff*p.qty; }
+function renderPositions(){
+  var a=curAccount(); var pos=(a&&a.positions)||[]; var live=!!state.settings.live;
+  var html='<div class="card"><div class="row-between"><h2 style="margin:0">'+t("positionsTitle")+'</h2><div style="display:flex;gap:6px"><button class="btn-ghost btn-sm" id="liveToggle" style="'+(live?"border-color:var(--green);color:var(--green)":"")+'">'+(live?"● ":"○ ")+'Live</button><button class="btn-ghost btn-sm" id="addPos">'+t("addPosition")+'</button></div></div>';
+  if(!pos.length){ html+='<div class="hint">'+t("noPositions")+'</div>'; }
+  else {
+    var totUn=0;
+    html+=pos.map(function(p){ var up=posPnl(p); if(up!=null)totUn+=up;
+      return '<div class="cf" style="align-items:flex-start"><div><div style="font-weight:600">'+esc(p.symbol)+' <span class="dir '+p.dir+'">'+(p.dir==="long"?"LONG":"SHORT")+'</span></div>'+
+        '<div class="muted" style="font-family:var(--mono);font-size:11.5px;margin-top:2px">'+t("entry")+" "+p.entry+" · "+t("qty")+" "+p.qty+(p.mark!=null?(" · "+t("currentPrice")+" "+p.mark):"")+'</div></div>'+
+        '<div style="text-align:right"><div class="'+(up!=null?(up>=0?"pos":"neg"):"muted")+'" style="font-family:var(--mono);font-weight:600">'+(up!=null?fmtMoney(up,true):"—")+'</div>'+
+        '<div style="margin-top:4px;white-space:nowrap"><button class="rowbtn" data-refresh="'+p.id+'" title="'+t("refreshPrice")+'">↻</button><button class="rowbtn" data-editpos="'+p.id+'" title="'+t("edit")+'">✎</button><button class="rowbtn" data-closepos="'+p.id+'" title="'+t("closePos")+'">✓</button><button class="rowbtn" data-delpos="'+p.id+'">✕</button></div></div></div>';
+    }).join("");
+    html+='<div class="row-between" style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px"><span class="muted">'+t("unrealized")+'</span><span class="'+(totUn>=0?"pos":"neg")+'" style="font-family:var(--mono);font-weight:600">'+fmtMoney(totUn,true)+'</span></div>';
+    if(live) html+='<canvas id="liveCanvas" height="90" style="width:100%;height:90px;margin-top:10px;display:block"></canvas>';
+  }
+  html+='<div class="hint" style="margin-top:8px">'+t(live?"liveNote":"brokerNote")+'</div></div>';
+  return html;
+}
+function wirePositions(){
+  var box=document.getElementById("posWrap"); if(!box)return;
+  bind("addPos","click",function(){openPosition(null);});
+  bind("liveToggle","click",function(){ state.settings.live=!state.settings.live; save(); if(state.settings.live){liveSeries=[];startLive();} else stopLive(); refreshPosWrap(); });
+  box.querySelectorAll("[data-editpos]").forEach(function(b){b.addEventListener("click",function(){openPosition(Number(b.getAttribute("data-editpos")));});});
+  box.querySelectorAll("[data-closepos]").forEach(function(b){b.addEventListener("click",function(){openClosePos(Number(b.getAttribute("data-closepos")));});});
+  box.querySelectorAll("[data-refresh]").forEach(function(b){b.addEventListener("click",function(){refreshPrice(Number(b.getAttribute("data-refresh")));});});
+  box.querySelectorAll("[data-delpos]").forEach(function(b){b.addEventListener("click",function(){var a=curAccount();a.positions=(a.positions||[]).filter(function(x){return x.id!==Number(b.getAttribute("data-delpos"));});save();renderActive();});});
+  drawLiveSpark();
+}
+function refreshPosWrap(){ var w=document.getElementById("posWrap"); if(w){ w.innerHTML=renderPositions(); wirePositions(); } }
+function drawLiveSpark(){
+  var c=document.getElementById("liveCanvas"); if(!c)return;
+  var ratio=window.devicePixelRatio||1, W=c.clientWidth||c.offsetWidth||300, H=90;
+  c.width=W*ratio; c.height=H*ratio; var ctx=c.getContext("2d"); ctx.setTransform(ratio,0,0,ratio,0,0); ctx.clearRect(0,0,W,H);
+  var css=getComputedStyle(document.documentElement);
+  if(liveSeries.length<2){ ctx.fillStyle=(css.getPropertyValue("--muted")||"#888").trim(); ctx.font="12px IBM Plex Mono, monospace"; ctx.textAlign="center"; ctx.fillText(t("liveWaiting"),W/2,H/2); return; }
+  var mn=Math.min.apply(null,liveSeries), mx=Math.max.apply(null,liveSeries); if(mn===mx){mn-=1;mx+=1;}
+  var pl=6,pr=6,pt=10,pb=10,pw=W-pl-pr,ph=H-pt-pb;
+  function X(i){return pl+(i/(liveSeries.length-1))*pw;} function Y(v){return pt+ph-((v-mn)/(mx-mn))*ph;}
+  var up=liveSeries[liveSeries.length-1]>=0, col=up?"#26d07c":"#ff5d5d";
+  ctx.beginPath(); liveSeries.forEach(function(v,i){ if(i===0)ctx.moveTo(X(i),Y(v)); else ctx.lineTo(X(i),Y(v)); });
+  ctx.strokeStyle=col; ctx.lineWidth=2; ctx.lineJoin="round"; ctx.stroke();
+  ctx.beginPath(); ctx.arc(X(liveSeries.length-1),Y(liveSeries[liveSeries.length-1]),3.2,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
+}
+function tickLive(){
+  var a=curAccount(); var pos=(a&&a.positions)||[]; if(!pos.length){ liveSeries.push(0); if(liveSeries.length>80)liveSeries.shift(); drawLiveSpark(); return; }
+  var jobs=pos.map(function(p){ var pair=symbolToPair(p.symbol);
+    return fetch("https://api.binance.com/api/v3/ticker/price?symbol="+pair).then(function(r){return r.ok?r.json():null;}).then(function(d){ if(d&&d.price)p.mark=parseFloat(d.price); }).catch(function(){});
+  });
+  Promise.all(jobs).then(function(){
+    var tot=0; pos.forEach(function(p){var u=posPnl(p); if(u!=null)tot+=u;});
+    liveSeries.push(tot); if(liveSeries.length>80)liveSeries.shift();
+    refreshPosWrap();
+  });
+}
+function startLive(){ stopLive(); tickLive(); liveTimer=setInterval(tickLive,5000); }
+function stopLive(){ if(liveTimer){clearInterval(liveTimer);liveTimer=null;} }
+function setPosDir(d){posDir=d;document.querySelectorAll("#posDirSeg button").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-pdir")===d);});}
+function openPosition(id){
+  posEditingId=id||null;
+  document.getElementById("posModalTitle").textContent = id? t("edit") : t("addPosition");
+  ["p_symbol","p_entry","p_qty","p_mark","p_stop","p_target","p_strat"].forEach(function(i){document.getElementById(i).value="";});
+  setPosDir("long");
+  if(id){ var p=((curAccount().positions)||[]).find(function(x){return x.id===id;}); if(p){ document.getElementById("p_symbol").value=p.symbol||""; document.getElementById("p_entry").value=p.entry; document.getElementById("p_qty").value=p.qty; document.getElementById("p_mark").value=p.mark!=null?p.mark:""; document.getElementById("p_stop").value=p.stop!=null?p.stop:""; document.getElementById("p_target").value=p.target!=null?p.target:""; document.getElementById("p_strat").value=p.strat||""; setPosDir(p.dir); } }
+  open("posOverlay");
+}
+function savePosition(){
+  var symbol=val("p_symbol").trim(), entry=numv("p_entry"), qty=numv("p_qty");
+  if(!symbol||entry==null||qty==null){ notify(lang==="fr"?"Remplis actif, prix d'entrée et quantité.":"Fill symbol, entry price and quantity."); return; }
+  var a=curAccount(); if(!a.positions)a.positions=[]; var mark=numv("p_mark");
+  var obj={ id: posEditingId||Date.now(), symbol:symbol, dir:posDir, entry:entry, qty:qty, mark:(mark!=null?mark:entry), stop:numv("p_stop"), target:numv("p_target"), strat:val("p_strat").trim(), dateOpen:new Date().toISOString().slice(0,10) };
+  if(posEditingId){ var i=a.positions.findIndex(function(x){return x.id===posEditingId;}); if(i>=0){ obj.dateOpen=a.positions[i].dateOpen||obj.dateOpen; a.positions[i]=obj; } } else a.positions.push(obj);
+  save(); close("posOverlay"); renderActive(); toast(t("saved"),null,null);
+}
+function refreshPrice(id){
+  var a=curAccount(); var pos=((a.positions)||[]).find(function(p){return p.id===id;}); if(!pos)return;
+  var pair=symbolToPair(pos.symbol);
+  fetch("https://api.binance.com/api/v3/ticker/price?symbol="+pair).then(function(r){return r.json();}).then(function(dt){
+    if(dt&&dt.price){ pos.mark=parseFloat(dt.price); save(); renderActive(); toast(t("priceUpdated")+" · "+pos.mark,null,null); } else notify(t("priceUnavail"));
+  }).catch(function(){ notify(t("priceUnavail")); });
+}
+function openClosePos(id){ var p=((curAccount().positions)||[]).find(function(x){return x.id===id;}); if(!p)return; closingPosId=id;
+  document.getElementById("closePosInfo").textContent = p.symbol+" "+(p.dir==="long"?"LONG":"SHORT")+" · "+t("entry")+" "+p.entry+" · "+t("qty")+" "+p.qty;
+  document.getElementById("cl_exit").value = p.mark!=null?p.mark:""; document.getElementById("cl_date").value=new Date().toISOString().slice(0,10);
+  open("closeOverlay");
+}
+function doClosePos(){
+  var exit=numv("cl_exit"); if(exit==null){ notify(lang==="fr"?"Saisis le prix de sortie.":"Enter the exit price."); return; }
+  var a=curAccount(); var i=((a.positions)||[]).findIndex(function(x){return x.id===closingPosId;}); if(i<0){close("closeOverlay");return;}
+  var p=a.positions[i];
+  a.trades.push({ id:Date.now(), symbol:p.symbol, dir:p.dir, entry:p.entry, exit:exit, qty:p.qty, fees:0, stop:p.stop!=null?p.stop:null, target:p.target!=null?p.target:null, dateOpen:p.dateOpen||null, timeOpen:null, dateClose:val("cl_date")||null, strat:p.strat||"", tags:[], emotion:0, mistakes:[], rulesFollowed:[], plan:"", lesson:"", notes:"", screenshot:null });
+  a.positions.splice(i,1); save(); close("closeOverlay"); renderActive(); toast(t("saved"),null,null);
+}
+function renderTrades(){
+  var strats={},syms={},tagset={}; curTrades().forEach(function(tr){if(tr.strat)strats[tr.strat]=1;if(tr.symbol)syms[tr.symbol]=1;(tr.tags||[]).forEach(function(g){if(g)tagset[g]=1;});});
+  function opts(obj,all,sel){var h='<option value="">'+all+'</option>';Object.keys(obj).sort().forEach(function(k){h+='<option'+(sel===k?' selected':'')+'>'+esc(k)+'</option>';});return h;}
+  var html=tabIntro("introTrades")+'<div id="posWrap">'+renderPositions()+'</div>'+'<div class="filters">'+
+    '<input id="fltQ" placeholder="'+t("search")+'" value="'+esc(filters.q)+'">'+
+    '<select id="fltSym">'+opts(syms,t("allSymbols"),filters.symbol)+'</select>'+
+    '<select id="fltStrat">'+opts(strats,t("allStrats"),filters.strat)+'</select>'+
+    '<select id="fltTag">'+opts(tagset,t("allTags"),filters.tag)+'</select>'+
+    '<select id="fltDir"><option value="">'+t("allDirs")+'</option><option value="long"'+(filters.dir==="long"?" selected":"")+'>'+t("long")+'</option><option value="short"'+(filters.dir==="short"?" selected":"")+'>'+t("short")+'</option></select>'+
+    '<select id="fltRes"><option value="">'+t("allResults")+'</option><option value="won"'+(filters.result==="won"?" selected":"")+'>'+t("won")+'</option><option value="lost"'+(filters.result==="lost"?" selected":"")+'>'+t("lost")+'</option></select>'+
+    ((filters.q||filters.symbol||filters.strat||filters.tag||filters.dir||filters.result)?'<button class="btn-ghost btn-sm" id="fltClear">✕ '+t("clearFilters")+'</button>':'')+
+    '</div>';
+  var list=filteredTrades();
+  if(list.length){ var fst=computeStats(list); html+='<div class="stats" style="margin-bottom:12px">'+statCard(t("netPnl"),fmtMoney(fst.net,true),fst.net>=0?"pos":"neg",fst.count+" "+t("trades"))+statCard(t("winRate"),fst.winRate.toFixed(0)+"%",fst.winRate>=50?"pos":"")+statCard(t("avgR"),fst.avgR==null?"—":(fst.avgR>=0?"+":"")+fst.avgR.toFixed(2)+"R",fst.avgR!=null&&fst.avgR>=0?"pos":"neg")+'</div>'; }
+  function arrow(k){return sortKey===k?(sortDir<0?" ↓":" ↑"):"";}
+  if(!list.length){ html+='<div class="card"><div class="empty"><div class="big">'+t("noData")+'</div></div></div>'; }
+  else{
+    html+='<div class="card"><div class="tbl-wrap"><table><thead><tr>'+
+      '<th data-sort="date">'+t("colDate")+arrow("date")+'</th>'+
+      '<th data-sort="symbol">'+t("colSym")+arrow("symbol")+'</th>'+
+      '<th>'+t("colDir")+'</th><th>'+t("colEntry")+'</th><th>'+t("colExit")+'</th>'+
+      '<th data-sort="qty">'+t("colQty")+arrow("qty")+'</th>'+
+      '<th data-sort="r">'+t("colR")+arrow("r")+'</th>'+
+      '<th>'+t("colStrat")+'</th><th data-sort="pnl">'+t("colPnl")+arrow("pnl")+'</th><th></th></tr></thead><tbody>';
+    list.forEach(function(tr){
+      var p=pnlOf(tr),r=rMultiple(tr);
+      html+='<tr class="row-click" data-row="'+tr.id+'">'+
+        '<td>'+(tradeDate(tr)||"—")+'</td>'+
+        '<td style="font-weight:600">'+esc(tr.symbol||"—")+'</td>'+
+        '<td><span class="dir '+tr.dir+'">'+(tr.dir==="long"?"LONG":"SHORT")+'</span></td>'+
+        '<td>'+tr.entry+'</td><td>'+tr.exit+'</td><td>'+tr.qty+'</td>'+
+        '<td class="'+(r!=null?(r>=0?"pos":"neg"):"")+'">'+(r!=null?(r>=0?"+":"")+r.toFixed(2):"—")+'</td>'+
+        '<td>'+(tr.strat?'<span class="tag">'+esc(tr.strat)+'</span>':'—')+'</td>'+
+        '<td class="'+(p>=0?"pos":"neg")+'" style="font-weight:600">'+fmtMoney(p,true)+'</td>'+
+        '<td style="white-space:nowrap"><button class="rowbtn" data-edit="'+tr.id+'" title="'+t("edit")+'">✎</button>'+
+        '<button class="rowbtn" data-dup="'+tr.id+'" title="'+t("duplicate")+'">⧉</button>'+
+        '<button class="rowbtn" data-del="'+tr.id+'" title="'+t("del")+'">✕</button></td></tr>';
+    });
+    html+='</tbody></table></div></div>';
+  }
+  var box=document.getElementById("tab-trades"); box.innerHTML=html;
+  // wire filters
+  var q=document.getElementById("fltQ"); if(q)q.addEventListener("input",function(){filters.q=q.value;renderTrades();q2focus();});
+  function q2focus(){var e=document.getElementById("fltQ");if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length);}}
+  bind("fltSym","change",function(e){filters.symbol=e.target.value;renderTrades();});
+  bind("fltStrat","change",function(e){filters.strat=e.target.value;renderTrades();});
+  bind("fltTag","change",function(e){filters.tag=e.target.value;renderTrades();});
+  bind("fltDir","change",function(e){filters.dir=e.target.value;renderTrades();});
+  bind("fltRes","change",function(e){filters.result=e.target.value;renderTrades();});
+  bind("fltClear","click",function(){filters={q:"",strat:"",symbol:"",dir:"",result:"",tag:""};renderTrades();});
+  box.querySelectorAll("th[data-sort]").forEach(function(th){th.addEventListener("click",function(){var k=th.getAttribute("data-sort");if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}renderTrades();});});
+  box.querySelectorAll("[data-edit]").forEach(function(b){b.addEventListener("click",function(e){e.stopPropagation();openTrade(Number(b.getAttribute("data-edit")));});});
+  box.querySelectorAll("[data-dup]").forEach(function(b){b.addEventListener("click",function(e){e.stopPropagation();duplicateTrade(Number(b.getAttribute("data-dup")));});});
+  box.querySelectorAll("[data-del]").forEach(function(b){b.addEventListener("click",function(e){e.stopPropagation();deleteTrade(Number(b.getAttribute("data-del")));});});
+  box.querySelectorAll("[data-row]").forEach(function(tr){tr.addEventListener("click",function(){openDetail(Number(tr.getAttribute("data-row")));});});
+  wirePositions();
+}
+
+var calMonth = new Date();
+function renderCalendar(){
+  var tr=curTrades();
+  var byDay={}; tr.forEach(function(x){var d=tradeDate(x); if(!d)return; byDay[d]=(byDay[d]||0)+pnlOf(x);});
+  var y=calMonth.getFullYear(),m=calMonth.getMonth();
+  var first=new Date(y,m,1),start=first.getDay(),days=new Date(y,m+1,0).getDate();
+  var monthName=calMonth.toLocaleDateString(lang==="fr"?"fr-FR":"en-US",{month:"long",year:"numeric"});
+  var dows=(lang==="fr"?["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"]:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]);
+  var monthNet=0; Object.keys(byDay).forEach(function(d){if(d.indexOf(y+"-"+String(m+1).padStart(2,"0"))===0)monthNet+=byDay[d];});
+  var html=tabIntro("introCal")+'<div class="card"><div class="cal-head">'+
+    '<button class="ic" id="calPrev" aria-label="Mois précédent">‹</button>'+
+    '<div style="text-align:center"><div style="font-family:var(--display);font-weight:600;text-transform:capitalize">'+monthName+'</div><div class="'+(monthNet>=0?"pos":"neg")+'" style="font-family:var(--mono);font-size:13px;margin-top:2px">'+fmtMoney(monthNet,true)+'</div></div>'+
+    '<button class="ic" id="calNext" aria-label="Mois suivant">›</button></div><div class="cal-grid">';
+  dows.forEach(function(d){html+='<div class="cal-dow">'+d+'</div>';});
+  for(var i=0;i<start;i++)html+='<div class="cal-cell empty"></div>';
+  for(var day=1;day<=days;day++){
+    var ds=y+"-"+String(m+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+    var v=byDay[ds]; var cls=v==null?"":(v>0?"win":(v<0?"loss":""));
+    html+='<div class="cal-cell '+cls+(v!=null?' row-click':'')+'" data-day="'+ds+'"><div class="d">'+day+'</div>'+(v!=null?'<div class="v '+(v>=0?"pos":"neg")+'">'+(v>=0?"+":"−")+Math.abs(Math.round(v))+'</div>':'')+'</div>';
+  }
+  html+='</div></div>';
+  document.getElementById("tab-calendar").innerHTML=html;
+  bind("calPrev","click",function(){calMonth=new Date(y,m-1,1);renderCalendar();});
+  bind("calNext","click",function(){calMonth=new Date(y,m+1,1);renderCalendar();});
+  document.querySelectorAll("#tab-calendar .cal-cell.row-click").forEach(function(c){c.addEventListener("click",function(){openDay(c.getAttribute("data-day"));});});
+}
+
+function segBlock(title,data){
+  if(!data.length)return '<div class="card"><h2>'+title+'</h2><div class="hint">'+t("noData")+'</div></div>';
+  data.sort(function(a,b){return b.net-a.net;});
+  var mx=Math.max.apply(null,data.map(function(d){return Math.abs(d.net);}))||1;
+  var rows=data.map(function(d){
+    var w=Math.abs(d.net)/mx*100, pos=d.net>=0;
+    return '<div class="segrow"><div class="name" title="'+esc(d.name)+'">'+esc(d.name)+'</div>'+
+      '<div class="bar"><div class="fill" style="width:'+w+'%;background:'+(pos?"var(--green)":"var(--red)")+'"></div></div>'+
+      '<div class="num '+(pos?"pos":"neg")+'">'+fmtMoney(d.net,true)+'</div></div>'+
+      '<div class="segrow" style="padding-top:0"><div class="name muted" style="font-size:11px">'+d.count+" "+t("trades")+'</div><div class="bar" style="background:none"></div><div class="num muted" style="font-size:11px">'+d.winRate.toFixed(0)+'%</div></div>';
+  }).join("");
+  return '<div class="card"><h2>'+title+'</h2>'+rows+'</div>';
+}
+
+function renderAnalyse(){
+  var tr=scope(curTrades()), s=computeStats(tr); var pb=periodBar();
+  if(!tr.length){ document.getElementById("tab-analyse").innerHTML=tabIntro("introAnalyse")+pb+'<div class="card"><div class="empty"><div class="big">'+t("noData")+'</div></div></div>'; bindPeriod(); return; }
+  var html=tabIntro("introAnalyse")+pb+'<div class="stats">'+
+    statCard(t("avgWin"),fmtMoney(s.avgWin,true),"pos")+
+    statCard(t("avgLoss"),fmtMoney(-s.avgLoss,true),"neg")+
+    statCard(t("bestTrade"),fmtMoney(s.best,true),"pos")+
+    statCard(t("worstTrade"),fmtMoney(s.worst,true),"neg")+
+    statCard(t("maxDD"),fmtMoney(-maxDrawdown(equitySeries(tr)),true),"neg")+
+    statCard(t("winStreak"),s.maxWin,"pos")+
+    statCard(t("lossStreak"),s.maxLoss,"neg")+
+    statCard(t("avgR"),s.avgR==null?"—":(s.avgR>=0?"+":"")+s.avgR.toFixed(2)+"R",s.avgR!=null&&s.avgR>=0?"pos":"neg")+
+    statCard(t("avgHold"),s.avgHold==null?"—":s.avgHold.toFixed(1)+" "+t("holdUnit"))+
+    statCard(t("payoff"),s.avgLoss>0?(s.avgWin/s.avgLoss).toFixed(2):"—",s.avgLoss>0&&(s.avgWin/s.avgLoss)>=1?"pos":"")+
+    '</div>';
+  html+='<div class="card"><h2>'+t("distribution")+'</h2><canvas id="histCanvas" height="160"></canvas></div>';
+  html+='<div class="card"><h2>'+t("monthly")+'</h2><canvas id="monthCanvas" height="160"></canvas></div>';
+  html+='<div class="card"><h2>'+t("ddCurve")+'</h2><canvas id="ddCanvas" height="160"></canvas></div>';
+  html+=segBlock(t("bySymbol"),segment(tr,function(x){return x.symbol;}));
+  html+=segBlock(t("byStrat"),segment(tr,function(x){return x.strat;}));
+  html+=segBlock(t("byDir"),segment(tr,function(x){return x.dir==="long"?t("long"):t("short");}));
+  html+=segBlock(t("byDay"),segment(tr,function(x){var d=tradeDate(x);return d?(lang==="fr"?["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"])[new Date(d).getDay()]:null;}));
+  var hasHour=tr.some(function(x){return hourOf(x)!=null;});
+  if(hasHour) html+=segBlock(t("bySession"),segment(tr.filter(function(x){return hourOf(x)!=null;}),function(x){return sessionOf(hourOf(x));}));
+  else html+='<div class="card"><h2>'+t("bySession")+'</h2><div class="hint">'+t("needHour")+'</div></div>';
+  var tagSeg=segmentMulti(tr,"tags"); if(tagSeg.length) html+=segBlock(t("byTag"),tagSeg);
+  var misSeg=segmentMulti(tr,"mistakes"); if(misSeg.length) html+=segBlock(t("byMistake"),misSeg);
+  document.getElementById("tab-analyse").innerHTML=html;
+  drawHistogram(document.getElementById("histCanvas"),tr);
+  drawMonthly(document.getElementById("monthCanvas"),tr);
+  drawDrawdown(document.getElementById("ddCanvas"),tr);
+  bindPeriod();
+}
+
+function drawHistogram(canvas,trades){
+  if(!canvas)return; var h=histogram(trades,9); var ratio=window.devicePixelRatio||1,W=canvas.clientWidth,H=160;
+  canvas.width=W*ratio;canvas.height=H*ratio;var ctx=canvas.getContext("2d");ctx.scale(ratio,ratio);ctx.clearRect(0,0,W,H);
+  if(!h)return; var n=h.counts.length,gap=6,bw=(W-gap*(n-1))/n,mx=Math.max.apply(null,h.counts)||1;
+  h.counts.forEach(function(c,i){var bh=(c/mx)*(H-26);var x=i*(bw+gap),yv=H-20-bh;var binMid=h.min+h.width*(i+0.5);
+    ctx.fillStyle=binMid>=0?"#26d07c":"#ff5d5d";ctx.fillRect(x,yv,bw,bh);
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--muted");ctx.font="9px IBM Plex Mono,monospace";ctx.textAlign="center";
+    if(c>0)ctx.fillText(c,x+bw/2,yv-3);});
+}
+function drawMonthly(canvas,trades){
+  if(!canvas)return; var m={}; trades.forEach(function(tr){var d=tradeDate(tr);if(!d)return;var k=d.slice(0,7);m[k]=(m[k]||0)+pnlOf(tr);});
+  var keys=Object.keys(m).sort(); var ratio=window.devicePixelRatio||1,W=canvas.clientWidth,H=160;
+  canvas.width=W*ratio;canvas.height=H*ratio;var ctx=canvas.getContext("2d");ctx.scale(ratio,ratio);ctx.clearRect(0,0,W,H);
+  if(!keys.length)return; var vals=keys.map(function(k){return m[k];}),mx=Math.max.apply(null,vals.map(Math.abs))||1;
+  var n=keys.length,gap=8,bw=Math.min(46,(W-gap*(n-1))/n),mid=H/2-6;
+  keys.forEach(function(k,i){var v=m[k],bh=Math.abs(v)/mx*(H/2-18),x=i*(bw+gap);
+    ctx.fillStyle=v>=0?"#26d07c":"#ff5d5d"; if(v>=0)ctx.fillRect(x,mid-bh,bw,bh); else ctx.fillRect(x,mid,bw,bh);
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--muted");ctx.font="9px IBM Plex Mono,monospace";ctx.textAlign="center";
+    ctx.fillText(k.slice(5),x+bw/2,H-4);});
+}
+function drawDrawdown(canvas,trades){
+  if(!canvas)return; var pts=equitySeries(trades);
+  var ratio=window.devicePixelRatio||1,W=canvas.clientWidth,H=160;
+  canvas.width=W*ratio;canvas.height=H*ratio;var ctx=canvas.getContext("2d");ctx.scale(ratio,ratio);ctx.clearRect(0,0,W,H);
+  var css=getComputedStyle(document.documentElement);
+  if(pts.length<2){ctx.fillStyle=css.getPropertyValue("--muted");ctx.font="13px IBM Plex Mono,monospace";ctx.textAlign="center";ctx.fillText(t("noData"),W/2,H/2);return;}
+  var peak=pts[0]; var dd=pts.map(function(v){if(v>peak)peak=v;return peak-v;});
+  var mx=Math.max.apply(null,dd)||1;
+  var pl=8,pr=8,pt=12,pb=12,pw=W-pl-pr,ph=H-pt-pb;
+  function x(i){return pl+(i/(dd.length-1))*pw;} function y(v){return pt+(v/mx)*ph;}
+  var grad=ctx.createLinearGradient(0,pt,0,H); grad.addColorStop(0,"rgba(255,93,93,.04)"); grad.addColorStop(1,"rgba(255,93,93,.32)");
+  ctx.beginPath();ctx.moveTo(x(0),y(0));dd.forEach(function(v,i){ctx.lineTo(x(i),y(v));});ctx.lineTo(x(dd.length-1),y(0));ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();dd.forEach(function(v,i){if(i===0)ctx.moveTo(x(i),y(v));else ctx.lineTo(x(i),y(v));});
+  ctx.strokeStyle="#ff5d5d";ctx.lineWidth=2;ctx.lineJoin="round";ctx.stroke();
+}
+
+function scaleRow(id,current,labels){ return '<div class="emoji-row" data-scale="'+id+'">'+[1,2,3,4,5].map(function(n){return '<button type="button" data-v="'+n+'"'+(current===n?' class="active"':'')+'>'+(labels?labels[n-1]:n)+'</button>';}).join("")+'</div>'; }
+function moodTagList(){ return T[lang].moodTagsArr || T.fr.moodTagsArr; }
+function reflectionCard(ci){
+  var fr=lang==="fr"; var out=[];
+  if(ci.stress>=4) out.push(["warn", fr?"Stress élevé aujourd'hui. Beaucoup de traders réduisent la voilure ou font une pause dans ces moments — ça protège le capital et la tête.":"High stress today. Many traders size down or take a break on days like this — it protects both your capital and your head."]);
+  if(ci.energy&&ci.energy<=2) out.push(["warn", fr?"Énergie basse — la fatigue dégrade les décisions. Repos d'abord, trades ensuite.":"Low energy — fatigue hurts decisions. Rest first, trade later."]);
+  if(ci.mood<=2&&ci.mood>0) out.push(["warn", fr?"Journée pas facile. Sois indulgent avec toi-même : une mauvaise journée n'efface pas tes progrès.":"Rough day. Be kind to yourself — one tough day doesn't erase your progress."]);
+  if(ci.mood>=4&&ci.stress&&ci.stress<=2) out.push(["good", fr?"Belle énergie aujourd'hui. Garde quand même ta discipline : l'excès de confiance est le piège des bons jours.":"Great energy today. Keep your discipline — overconfidence is the trap of good days."]);
+  if(ci.mood===1||ci.stress>=5) out.push(["warn", fr?"Si ça pèse vraiment en ce moment, tu n'as pas à gérer ça seul : en parler à une personne de confiance ou à un professionnel peut beaucoup aider.":"If things feel really heavy right now, you don't have to handle it alone — talking to someone you trust or a professional can really help."]);
+  if(!out.length) out.push(["good", fr?"Merci pour ton check-in. Noter son état chaque jour, c'est déjà un avantage sur la plupart des traders.":"Thanks for checking in. Tracking your state daily already puts you ahead of most traders."]);
+  return '<div class="card"><h2>'+t("reflection")+'</h2>'+out.map(function(o){return '<div class="insight '+o[0]+'"><span class="dot"></span><span>'+esc(o[1])+'</span></div>';}).join("")+'</div>';
+}
+function moodVsPnlCard(){
+  var fr=lang==="fr"; var net={}; curTrades().forEach(function(tr){var d=tradeDate(tr);if(d)net[d]=(net[d]||0)+pnlOf(tr);});
+  var calm=[],tense=[]; state.checkins.forEach(function(c){ if(net[c.date]==null)return; if(c.stress&&c.stress<=2)calm.push(net[c.date]); else if(c.stress>=4)tense.push(net[c.date]); });
+  var html='<div class="card"><h2>'+t("moodVsPnl")+'</h2>';
+  if(!calm.length&&!tense.length){ html+='<div class="hint">'+(fr?"Fais quelques check-ins les jours où tu trades pour révéler le lien entre ton mental et tes résultats.":"Log a few check-ins on days you trade to reveal the link between mindset and results.")+'</div></div>'; return html; }
+  function avg(a){return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:null;}
+  var ca=avg(calm),ta=avg(tense);
+  if(ca!=null) html+='<div class="segrow"><div class="name">'+t("calmDays")+'</div><div class="bar" style="background:none"></div><div class="num '+(ca>=0?"pos":"neg")+'">'+fmtMoney(ca,true)+'</div></div>';
+  if(ta!=null) html+='<div class="segrow"><div class="name">'+t("tenseDays")+'</div><div class="bar" style="background:none"></div><div class="num '+(ta>=0?"pos":"neg")+'">'+fmtMoney(ta,true)+'</div></div>';
+  if(ca!=null&&ta!=null) html+='<div class="insight '+(ca-ta>0?"good":"warn")+'" style="margin-top:8px"><span class="dot"></span><span>'+esc(fr?("En moyenne, tes jours calmes rapportent "+fmtMoney(ca-ta,true)+" de plus que tes jours tendus."):("On average, your calm days bring "+fmtMoney(ca-ta,true)+" more than your tense days."))+'</span></div>';
+  html+='</div>'; return html;
+}
+function drawMood(canvas){
+  if(!canvas)return; var cks=state.checkins.slice().filter(function(c){return c.mood;}).sort(function(a,b){return a.date.localeCompare(b.date);}).slice(-14);
+  var ratio=window.devicePixelRatio||1,W=canvas.clientWidth,H=130;
+  canvas.width=W*ratio;canvas.height=H*ratio;var ctx=canvas.getContext("2d");ctx.scale(ratio,ratio);ctx.clearRect(0,0,W,H);
+  var css=getComputedStyle(document.documentElement);
+  if(cks.length<2){ctx.fillStyle=css.getPropertyValue("--muted");ctx.font="13px IBM Plex Mono,monospace";ctx.textAlign="center";ctx.fillText(t("noData"),W/2,H/2);return;}
+  var pl=10,pr=10,pt=12,pb=12,pw=W-pl-pr,ph=H-pt-pb;
+  function x(i){return pl+(i/(cks.length-1))*pw;} function y(v){return pt+ph-((v-1)/4)*ph;}
+  ctx.strokeStyle=css.getPropertyValue("--line");ctx.lineWidth=1;[1,3,5].forEach(function(g){ctx.beginPath();ctx.moveTo(pl,y(g));ctx.lineTo(W-pr,y(g));ctx.stroke();});
+  ctx.beginPath();cks.forEach(function(c,i){if(i===0)ctx.moveTo(x(i),y(c.mood));else ctx.lineTo(x(i),y(c.mood));});
+  ctx.strokeStyle="#f5b544";ctx.lineWidth=2.4;ctx.lineJoin="round";ctx.stroke();
+  cks.forEach(function(c,i){ctx.beginPath();ctx.arc(x(i),y(c.mood),3.2,0,Math.PI*2);ctx.fillStyle="#f5b544";ctx.fill();});
+}
+function saveCheckin(){
+  if(!ciMood){ notify(lang==="fr"?"Choisis au moins ton humeur.":"Pick at least your mood."); return; }
+  var today=new Date().toISOString().slice(0,10);
+  var noteEl=document.getElementById("ciNote"); var note=noteEl?noteEl.value.trim():"";
+  var ex=state.checkins.find(function(c){return c.date===today;});
+  var obj={id:ex?ex.id:Date.now(),date:today,mood:ciMood,energy:ciEnergy,stress:ciStress,tags:ciTags.slice(),note:note};
+  if(ex)state.checkins[state.checkins.indexOf(ex)]=obj; else state.checkins.push(obj);
+  mentalEditing=false; save(); renderMental(); toast(t("checkinDone"),null,null);
+}
+function renderCoach(){
+  var prof=state.settings.profile;
+  var html='<div class="card"><h2>'+C("coachTitle")+'</h2>';
+  if(prof){ html+='<div class="cf"><span class="muted">'+C("profileTitle")+'</span><span style="font-weight:600">'+esc(prof.label)+'</span></div>'; }
+  else { html+='<div class="hint">'+C("profileIntro")+'</div>'; }
+  var checks=state.coachChecks||[]; var last=checks.length?checks[checks.length-1]:null;
+  if(last){ var col=last.verdict==="go"?"var(--green)":(last.verdict==="caution"?"var(--amber)":"var(--red)"); var vt=C(last.verdict);
+    html+='<div style="margin-top:12px;padding:14px;border-radius:12px;border:1px solid '+col+'"><div style="font-weight:700;color:'+col+'">'+vt.t+'</div><div class="muted" style="margin-top:5px;font-size:13px">'+vt.d+'</div>'+(last.distress?('<div style="margin-top:8px;font-size:13px;color:var(--amber)">'+C("distress")+'</div>'):'')+'<div class="muted" style="margin-top:6px;font-size:11px">'+last.date+'</div></div>'; }
+  html+='<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn-primary btn-sm" id="coachReady">'+C("readyTitle")+'</button><button class="btn-ghost btn-sm" id="coachProfileBtn">'+(prof?C("retake"):C("profileTitle"))+'</button><button class="btn-ghost btn-sm" id="deepStart">'+D("title")+' (~10 min)</button></div>';
+  html+='<div class="hint" style="margin-top:10px">'+C("disclaimer")+'</div></div>';
+  return html;
+}
+var quizKind=null, quizAns=[];
+function openQuiz(kind){ quizKind=kind; var qs=(kind==="profile"?C("profileQ"):C("readyQ")); quizAns=qs.map(function(){return null;}); renderQuiz(); open("coachOverlay"); }
+function renderQuiz(){
+  var kind=quizKind; var qs=(kind==="profile"?C("profileQ"):C("readyQ"));
+  var title=kind==="profile"?C("profileTitle"):C("readyTitle"); var intro=kind==="profile"?C("profileIntro"):C("readyIntro");
+  var html='<h3 style="margin:0 0 4px">'+esc(title)+'</h3><div class="hint" style="margin-bottom:14px">'+esc(intro)+'</div>';
+  qs.forEach(function(item,qi){ html+='<div class="field"><label>'+esc(item.q)+'</label><div class="quiz-opts">'+item.o.map(function(opt,oi){return '<button type="button" class="quiz-opt'+(quizAns[qi]===oi?" active":"")+'" data-qi="'+qi+'" data-oi="'+oi+'">'+esc(opt[0])+'</button>';}).join("")+'</div></div>'; });
+  var done=quizAns.every(function(a){return a!=null;});
+  html+='<div class="hint" style="margin:6px 0 10px">'+C("disclaimer")+'</div>';
+  html+='<div class="modal-actions"><button class="btn-ghost" id="coachCancel" data-i18n="cancel">Annuler</button><button class="btn-primary" id="coachAnalyze"'+(done?"":" disabled style=\"opacity:.5\"")+'>'+C("analyze")+'</button></div>';
+  document.getElementById("coachBody").innerHTML=html;
+  document.querySelectorAll("#coachBody .quiz-opt").forEach(function(b){b.addEventListener("click",function(){quizAns[Number(b.getAttribute("data-qi"))]=Number(b.getAttribute("data-oi"));renderQuiz();});});
+  bind("coachCancel","click",function(){close("coachOverlay");});
+  bind("coachAnalyze","click",analyzeQuiz);
+}
+function analyzeQuiz(){
+  if(!quizAns.every(function(a){return a!=null;})) return;
+  var d=new Date().toISOString().slice(0,10);
+  if(quizKind==="profile"){ var risk=coachProfile(quizAns); state.settings.profile={risk:risk, answers:quizAns.slice(), date:d, label:C("labels")[risk]}; save(); close("coachOverlay"); renderActive(); notify(C("labels")[risk]); }
+  else { var pr=(state.settings.profile&&state.settings.profile.risk)||"mid"; var r=coachVerdict(quizAns,pr); if(!state.coachChecks)state.coachChecks=[]; state.coachChecks.push({id:Date.now(), date:d, answers:quizAns.slice(), verdict:r.verdict, distress:r.distress}); save(); close("coachOverlay"); renderActive(); }
+}
+var deepAns=[];
+function openDeep(){ var total=0; D("dimensions").forEach(function(dm){total+=dm.q.length;}); deepAns=new Array(total).fill(null); renderDeepQuiz(); open("coachOverlay"); }
+function renderDeepQuiz(){
+  var dims=D("dimensions"), scale=D("scale");
+  var html='<h3 style="margin:0 0 4px">'+esc(D("title"))+'</h3><div class="hint" style="margin-bottom:14px">'+esc(D("intro"))+'</div>';
+  var idx=0;
+  dims.forEach(function(dm){
+    html+='<div style="font-family:var(--display);font-weight:700;margin:16px 0 6px;color:var(--green)">'+esc(dm.name)+'</div>';
+    dm.q.forEach(function(qq){ var qi=idx;
+      html+='<div class="field"><label>'+esc(qq)+'</label><div class="quiz-opts" style="flex-direction:row;flex-wrap:wrap;gap:5px">'+scale.map(function(s,oi){return '<button type="button" class="quiz-opt'+(deepAns[qi]===oi?" active":"")+'" data-di="'+qi+'" data-oi="'+oi+'" style="flex:1;min-width:60px;text-align:center;font-size:11.5px;padding:8px 6px">'+esc(s)+'</button>';}).join("")+'</div></div>';
+      idx++;
+    });
+  });
+  var answered=deepAns.filter(function(a){return a!=null;}).length;
+  html+='<div class="hint" style="margin:10px 0">'+answered+' / '+deepAns.length+' · '+C("disclaimer")+'</div>';
+  html+='<div class="modal-actions"><button class="btn-ghost" id="deepCancel">'+t("cancel")+'</button><button class="btn-primary" id="deepSubmit">'+D("submit")+'</button></div>';
+  document.getElementById("coachBody").innerHTML=html;
+  document.querySelectorAll("#coachBody .quiz-opt").forEach(function(b){b.addEventListener("click",function(){deepAns[Number(b.getAttribute("data-di"))]=Number(b.getAttribute("data-oi"));renderDeepQuiz();});});
+  bind("deepCancel","click",function(){close("coachOverlay");});
+  bind("deepSubmit","click",analyzeDeep);
+}
+function analyzeDeep(){
+  var dims=D("dimensions"); var perDim=dims[0].q.length;
+  var scores=deepScore(deepAns.map(function(a){return a==null?2:a;}), perDim);
+  var obj={ id:Date.now(), date:new Date().toISOString().slice(0,10), scores:{}, overall:Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length) };
+  dims.forEach(function(dm,i){ obj.scores[dm.key]=scores[i]; });
+  if(!state.deepResults)state.deepResults=[]; state.deepResults.push(obj); save(); close("coachOverlay"); renderActive();
+}
+function renderCoachTab(){
+  var html=tabIntro("introCoach")+renderCoach();
+  var deep=(state.deepResults||[]); var dlast=deep.length?deep[deep.length-1]:null;
+  if(dlast){
+    var dims=D("dimensions");
+    html+='<div class="card"><h2>'+D("resultTitle")+'</h2>';
+    html+='<div class="muted" style="font-size:12px;margin-bottom:10px">'+dlast.date+' · '+D("levels")[deepLevel(dlast.overall)]+' ('+dlast.overall+'/100)</div>';
+    dims.forEach(function(dm){ var sc=dlast.scores[dm.key]; if(sc==null)return; var col=sc<40?"var(--red)":(sc<=70?"var(--amber)":"var(--green)");
+      html+='<div style="margin:7px 0"><div class="row-between" style="font-size:12.5px"><span>'+esc(dm.name)+'</span><span class="muted" style="font-family:var(--mono)">'+sc+'</span></div><div style="height:7px;border-radius:4px;background:var(--input);margin-top:3px;overflow:hidden"><div style="height:100%;width:'+sc+'%;background:'+col+'"></div></div></div>';
+    });
+    var strong=dims.filter(function(dm){return dlast.scores[dm.key]>70;});
+    var weak=dims.filter(function(dm){return dlast.scores[dm.key]<=70;}).sort(function(a,b){return dlast.scores[a.key]-dlast.scores[b.key];});
+    if(strong.length) html+='<div style="margin-top:14px"><div style="font-weight:700;color:var(--green)">'+D("strong")+'</div><div class="muted" style="font-size:13px;margin-top:4px">'+strong.map(function(dm){return esc(dm.name);}).join(", ")+'</div></div>';
+    if(weak.length){
+      var focusW=weak.slice(0,3);
+      html+='<div style="margin-top:16px"><div style="font-weight:700;color:var(--amber)">'+D("work")+'</div>';
+      focusW.forEach(function(dm){ var band=dlast.scores[dm.key]<40?"low":"mid"; var adv=D("advice")[dm.key][band]; var bar=D("barriers")[dm.key];
+        html+='<div style="margin-top:10px"><div style="font-weight:600;font-size:13.5px">'+esc(dm.name)+'</div>'+(bar?'<div class="muted" style="font-size:12.5px;margin-top:3px">🔓 '+esc(bar)+'</div>':'')+'<div style="font-size:13px;margin-top:4px">'+esc(adv)+'</div></div>';
+      });
+      html+='</div>';
+      var exs=D("exercises").filter(function(e){return focusW.some(function(dm){return e.dim.indexOf(dm.key)>=0;});}).slice(0,5);
+      if(exs.length){ html+='<div style="margin-top:16px"><div style="font-weight:700">'+D("exercises")+'</div>'+exs.map(function(e){return '<div style="margin-top:8px;padding:11px 13px;border:1px solid var(--line);border-radius:11px"><div style="font-weight:600;font-size:13.5px">'+esc(e.name)+'</div><div class="muted" style="font-size:12.5px;margin-top:4px;line-height:1.5">'+esc(e.how)+'</div></div>';}).join("")+'</div>'; }
+    }
+    html+='<div style="margin-top:14px"><button class="btn-ghost btn-sm" id="deepRetake">'+D("title")+'</button></div></div>';
+  }
+  var checks=(state.coachChecks||[]).slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,14);
+  if(checks.length){
+    var icon={go:"🟢",caution:"🟡",stop:"🔴"};
+    html+='<div class="card"><h2>'+t("history")+'</h2>'+checks.map(function(c){return '<div class="cf"><span>'+(icon[c.verdict]||"")+' '+C(c.verdict).t+(c.distress?' ·':'')+'</span><span class="muted" style="font-size:11.5px;font-family:var(--mono)">'+c.date+'</span></div>';}).join("")+'</div>';
+  }
+  document.getElementById("tab-coach").innerHTML=html;
+  bind("coachReady","click",function(){openQuiz("ready");});
+  bind("coachProfileBtn","click",function(){openQuiz("profile");});
+  bind("deepStart","click",openDeep);
+  bind("deepRetake","click",openDeep);
+}
+function checkinHistoryCard(){
+  var emo=["—","😢","😕","😐","🙂","😄"];
+  var list=state.checkins.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,12);
+  if(!list.length) return "";
+  var rows=list.map(function(c){return '<div class="cf"><span>'+c.date+'  '+(emo[c.mood]||"")+(c.note?(' · '+esc(c.note.slice(0,42))+(c.note.length>42?'…':'')):'')+'</span><span class="muted" style="font-family:var(--mono);font-size:11.5px">'+t("stressQ")+' '+(c.stress||"—")+'/5</span></div>';}).join("");
+  return '<div class="card"><h2>'+t("history")+'</h2>'+rows+'</div>';
+}
+function renderMental(){
+  var today=new Date().toISOString().slice(0,10);
+  var ci=state.checkins.find(function(c){return c.date===today;});
+  var emo=["—","😢","😕","😐","🙂","😄"]; var html=tabIntro("introMental");
+  if(!ci || mentalEditing){
+    ciMood=ci?ci.mood:0; ciEnergy=ci?ci.energy:0; ciStress=ci?ci.stress:0; ciTags=ci?(ci.tags||[]).slice():[];
+    html+='<div class="card"><h2>'+t("checkinTitle")+'</h2>';
+    html+='<div class="field"><label>'+t("moodQ")+'</label>'+scaleRow("mood",ciMood,["😢","😕","😐","🙂","😄"])+'</div>';
+    html+='<div class="field"><label>'+t("energyQ")+' (1-5)</label>'+scaleRow("energy",ciEnergy)+'</div>';
+    html+='<div class="field"><label>'+t("stressQ")+' (1-5)</label>'+scaleRow("stress",ciStress)+'</div>';
+    html+='<div class="field"><label>'+t("moodTags")+'</label><div class="chips" id="ciChips">'+moodTagList().map(function(m){return '<div class="chip'+(ciTags.indexOf(m)>=0?' active':'')+'" data-mt="'+esc(m)+'">'+esc(m)+'</div>';}).join("")+'</div></div>';
+    html+='<div class="field"><label>'+t("dayQ")+'</label><textarea id="ciNote" rows="3">'+esc(ci?(ci.note||""):"")+'</textarea></div>';
+    html+='<div class="modal-actions"><button class="btn-primary" id="ciSave">'+t("checkinSave")+'</button></div></div>';
+  } else {
+    html+='<div class="card"><div class="row-between"><h2 style="margin:0">'+t("checkinTitle")+'</h2><button class="btn-ghost btn-sm" id="ciEdit">'+t("edit")+'</button></div>';
+    html+='<div class="det-grid"><div><div class="k">'+t("moodQ")+'</div><div class="v">'+(emo[ci.mood]||"—")+'</div></div><div><div class="k">'+t("energyQ")+'</div><div class="v">'+(ci.energy||"—")+'/5</div></div><div><div class="k">'+t("stressQ")+'</div><div class="v">'+(ci.stress||"—")+'/5</div></div></div>';
+    if((ci.tags||[]).length) html+='<div style="margin-bottom:6px">'+ci.tags.map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join("")+'</div>';
+    if(ci.note) html+='<div class="det-block"><div class="t">'+esc(ci.note)+'</div></div>';
+    html+='</div>'+reflectionCard(ci);
+  }
+  html+='<div class="card"><h2>'+t("moodTrend")+'</h2><canvas id="moodCanvas" height="130"></canvas></div>';
+  html+=moodVsPnlCard();
+  html+=checkinHistoryCard();
+  html+='<div class="card" style="border-color:rgba(245,181,68,.32)"><div class="hint" style="font-style:normal;color:var(--muted)">'+t("wellbeingNote")+'</div></div>';
+  document.getElementById("tab-mental").innerHTML=html;
+  document.querySelectorAll("#tab-mental [data-scale] button").forEach(function(b){b.addEventListener("click",function(){var row=b.parentNode.getAttribute("data-scale");var v=Number(b.getAttribute("data-v"));if(row==="mood")ciMood=v;else if(row==="energy")ciEnergy=v;else ciStress=v;Array.prototype.forEach.call(b.parentNode.querySelectorAll("button"),function(x){x.classList.toggle("active",x===b);});});});
+  var chips=document.getElementById("ciChips"); if(chips)chips.querySelectorAll(".chip").forEach(function(c){c.addEventListener("click",function(){var m=c.getAttribute("data-mt");var i=ciTags.indexOf(m);if(i>=0)ciTags.splice(i,1);else ciTags.push(m);c.classList.toggle("active");});});
+  bind("ciSave","click",saveCheckin);
+  bind("ciEdit","click",function(){mentalEditing=true;renderMental();});
+  drawMood(document.getElementById("moodCanvas"));
+}
+var walletBal=null, walletUsd=null;
+function walletCard(){
+  var w=state.settings.wallet;
+  var html='<div class="card"><h2>'+t("walletTitle")+'</h2>';
+  if(w && w.address){
+    var shortAddr=w.address.slice(0,4)+"…"+w.address.slice(-4);
+    html+='<div class="cf"><span class="muted">'+t("walletConnected")+'</span><span style="font-family:var(--mono);font-size:12.5px">'+shortAddr+'</span></div>';
+    html+='<div class="cf"><span class="muted">'+t("walletBalance")+'</span><span style="font-family:var(--mono);font-weight:600">'+(walletBal!=null?(walletBal.toFixed(3)+" SOL"+(walletUsd!=null?(" · $"+Math.round(walletUsd)):"")):"—")+'</span></div>';
+    html+='<div style="display:flex;gap:8px;margin-top:10px"><button class="btn-ghost btn-sm" id="walletRefresh">'+t("walletRefresh")+'</button><button class="btn-ghost btn-sm" id="walletDisconnect">'+t("walletDisconnect")+'</button></div>';
+  } else {
+    html+='<button class="btn-primary btn-sm" id="walletConnect">'+t("walletConnect")+'</button>';
+  }
+  html+='<div class="hint" style="margin-top:10px">'+t("walletNote")+'</div></div>';
+  return html;
+}
+function connectPhantom(){
+  var prov=(window.phantom&&window.phantom.solana)||(window.solana&&window.solana.isPhantom?window.solana:null);
+  if(!prov){ notify(t("walletNotFound")); return; }
+  prov.connect().then(function(res){
+    var addr=(res&&res.publicKey&&res.publicKey.toString())||(prov.publicKey&&prov.publicKey.toString());
+    if(!addr){ notify(t("walletNotFound")); return; }
+    state.settings.wallet={address:addr,chain:"solana"}; walletBal=null; walletUsd=null; save(); renderAccount(); fetchWalletBalance();
+  }).catch(function(){});
+}
+function fetchWalletBalance(){
+  var w=state.settings.wallet; if(!w||!w.address)return;
+  fetch("https://api.mainnet-beta.solana.com",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({jsonrpc:"2.0",id:1,method:"getBalance",params:[w.address]})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d&&d.result&&typeof d.result.value==="number"){ walletBal=d.result.value/1e9;
+        return fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT").then(function(r){return r.ok?r.json():null;}).then(function(p){ if(p&&p.price)walletUsd=walletBal*parseFloat(p.price); renderAccount(); });
+      } else { notify(t("walletError")); }
+    }).catch(function(){ notify(t("walletError")); });
+}
+function disconnectWallet(){
+  try{ var prov=(window.phantom&&window.phantom.solana)||window.solana; if(prov&&prov.disconnect)prov.disconnect(); }catch(e){}
+  state.settings.wallet=null; walletBal=null; walletUsd=null; save(); renderAccount();
+}
+function renderAccount(){
+  var a=curAccount(); if(!a){document.getElementById("tab-account").innerHTML="";return;}
+  var bal=accountBalance(a,state.cashflows);
+  var cfs=state.cashflows.filter(function(c){return c.accountId===a.id;}).sort(function(x,y){return (y.date||"").localeCompare(x.date||"");});
+  var html=tabIntro("introAccount")+'<div class="stats">'+
+    statCard(t("balance"),fmtMoney(bal),bal>=(a.startBalance||0)?"pos":"neg",esc(a.name))+
+    statCard(t("startBal"),fmtMoney(a.startBalance||0))+
+    '</div>';
+  // cashflows
+  html+='<div class="card"><div class="row-between"><h2 style="margin:0">'+t("deposits")+'</h2><button class="btn-ghost btn-sm" id="addCf">'+t("addCf")+'</button></div>';
+  if(!cfs.length)html+='<div class="hint">'+t("noCf")+'</div>';
+  else cfs.forEach(function(c){html+='<div class="cf"><span>'+(c.date||"—")+' · '+(c.type==="deposit"?t("deposit"):t("withdraw"))+'</span><span class="'+(c.type==="deposit"?"pos":"neg")+'" style="font-family:var(--mono);font-weight:600">'+(c.type==="deposit"?"+":"−")+fmtMoney(c.amount).replace("−","")+' <button class="rowbtn" data-delcf="'+c.id+'">✕</button></span></div>';});
+  html+='</div>';
+  // accounts management
+  html+='<div class="card"><div class="row-between"><h2 style="margin:0">'+t("manageAcct")+'</h2><div><button class="btn-ghost btn-sm" id="renameAcct">'+t("renameAcct")+'</button> <button class="btn-ghost btn-sm" id="addAcct">'+t("addAcct")+'</button></div></div>';
+  html+='<div class="hint">'+esc(a.name)+' · '+a.currency+(state.accounts.length>1?'':'')+'</div>';
+  if(state.accounts.length>1)html+='<button class="btn-danger btn-sm" id="delAcct">'+t("delAcct")+'</button>';
+  html+='</div>';
+  var rulesArr=state.settings.rules||[];
+  html+='<div class="card"><h2>'+t("rulesTitle")+'</h2><div id="rulesList">'+(rulesArr.length?rulesArr.map(function(r,i){return '<div class="cf"><span>'+esc(r)+'</span><button class="rowbtn" data-delrule="'+i+'">✕</button></div>';}).join(""):'<div class="hint">'+t("noRulesHint")+'</div>')+'</div><div style="display:flex;gap:8px;margin-top:10px"><input id="ruleInput" placeholder="'+t("rulesAddPh")+'" style="flex:1"><button class="btn-ghost btn-sm" id="ruleAdd">+</button></div></div>';
+  html+='<div class="card"><h2>'+t("settings")+'</h2><div class="grid2"><div class="field"><label>'+t("goalTitle")+' ('+curSymbol()+')</label><input id="goalInput" type="number" step="any" value="'+(state.settings.goal||"")+'" placeholder="0"></div><div class="field"><label>'+t("dailyLoss")+' ('+curSymbol()+')</label><input id="lossInput" type="number" step="any" value="'+(state.settings.dailyLossLimit||"")+'" placeholder="0"></div></div><div class="hint" id="storageInfo"></div></div>';
+  html+=walletCard();
+  html+='<div class="card"><h2>'+t("backup")+'</h2><div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    '<button class="btn-ghost btn-sm" id="expJson">'+t("exportJson")+'</button>'+
+    '<button class="btn-ghost btn-sm" id="impJson">'+t("importJson")+'</button>'+
+    '<button class="btn-ghost btn-sm" id="expCsv">'+t("exportCsv")+'</button>'+
+    '<button class="btn-ghost btn-sm" id="impCsv">'+t("importCsv")+'</button>'+
+    '<button class="btn-ghost btn-sm" id="calcBtn">'+t("calcOpen")+'</button></div></div>';
+  html+='<div class="card"><h2>'+t("dangerZone")+'</h2><button class="btn-danger btn-sm" id="resetBtn">'+t("resetAll")+'</button></div>';
+  document.getElementById("tab-account").innerHTML=html;
+  bind("addCf","click",openCf);
+  document.querySelectorAll("[data-delcf]").forEach(function(b){b.addEventListener("click",function(){state.cashflows=state.cashflows.filter(function(c){return c.id!==Number(b.getAttribute("data-delcf"));});save();renderAccount();renderActive();});});
+  bind("addAcct","click",function(){openAcct(false);});
+  bind("renameAcct","click",function(){openAcct(true);});
+  bind("delAcct","click",deleteAccount);
+  bind("expJson","click",exportJson);
+  bind("impJson","click",function(){openImport("json");});
+  bind("expCsv","click",exportCsv);
+  bind("impCsv","click",function(){openImport("csv");});
+  bind("calcBtn","click",openCalc);
+  bind("resetBtn","click",function(){ confirmModal(t("confirmReset"),freshStart); });
+  bind("walletConnect","click",connectPhantom);
+  bind("walletRefresh","click",fetchWalletBalance);
+  bind("walletDisconnect","click",disconnectWallet);
+  var goalInp=document.getElementById("goalInput"); if(goalInp)goalInp.addEventListener("change",function(){var v=parseFloat(goalInp.value);state.settings.goal=isNaN(v)?null:v;save();});
+  var lossInp=document.getElementById("lossInput"); if(lossInp)lossInp.addEventListener("change",function(){var v=parseFloat(lossInp.value);state.settings.dailyLossLimit=isNaN(v)?null:Math.abs(v);save();});
+  bind("ruleAdd","click",function(){var inp=document.getElementById("ruleInput");var v=inp.value.trim();if(!v)return;if(!state.settings.rules)state.settings.rules=[];state.settings.rules.push(v);save();renderAccount();});
+  var ruleInp=document.getElementById("ruleInput"); if(ruleInp)ruleInp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();document.getElementById("ruleAdd").click();}});
+  document.querySelectorAll("[data-delrule]").forEach(function(b){b.addEventListener("click",function(){var i=Number(b.getAttribute("data-delrule"));state.settings.rules.splice(i,1);save();renderAccount();});});
+  var si=document.getElementById("storageInfo"); if(si){var used=0;try{used=JSON.stringify(state).length/1024;}catch(e){}si.textContent=t("storageUsed")+" : ~"+used.toFixed(0)+" KB";}
+}
+
+/* ============================= Trade modal logic ============================= */
+var editingId=null, curDir="long", curEmotion=0, curMistakes=[], curShot=null;
+var mentalEditing=false, ciMood=0, ciEnergy=0, ciStress=0, ciTags=[];
+var curRules=[];
+var posEditingId=null, posDir="long", closingPosId=null;
+var liveTimer=null, liveSeries=[];
+function symbolToPair(sym){ var s=(sym||"").toUpperCase().replace(/[^A-Z0-9]/g,""); return /USDT$/.test(s)?s:(s+"USDT"); }
+function buildMistakeChips(){
+  var box=document.getElementById("mistakeChips");
+  box.innerHTML=T[lang].mLabels.map(function(m){return '<div class="chip" data-m="'+esc(m)+'">'+esc(m)+'</div>';}).join("");
+  box.querySelectorAll(".chip").forEach(function(c){c.addEventListener("click",function(){var m=c.getAttribute("data-m");var i=curMistakes.indexOf(m);if(i>=0)curMistakes.splice(i,1);else curMistakes.push(m);c.classList.toggle("active");});});
+}
+function buildRuleChips(){
+  var box=document.getElementById("ruleChips"); var field=document.getElementById("rulesField"); if(!box)return;
+  var rules=state.settings.rules||[];
+  if(!rules.length){ if(field)field.style.display="none"; box.innerHTML=""; return; }
+  if(field)field.style.display="";
+  box.innerHTML=rules.map(function(r){return '<div class="chip" data-r="'+esc(r)+'">'+esc(r)+'</div>';}).join("");
+  box.querySelectorAll(".chip").forEach(function(c){c.addEventListener("click",function(){var r=c.getAttribute("data-r");var i=curRules.indexOf(r);if(i>=0)curRules.splice(i,1);else curRules.push(r);c.classList.toggle("active");});});
+}
+function setDir(d){curDir=d;document.querySelectorAll("#dirSeg button").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-dir")===d);});updatePnl();}
+function setEmotion(e){curEmotion=e;document.querySelectorAll("#emojiRow button").forEach(function(b){b.classList.toggle("active",Number(b.getAttribute("data-e"))===e);});}
+function val(id){return document.getElementById(id).value;}
+function numv(id){var v=parseFloat(val(id));return isNaN(v)?null:v;}
+function updatePnl(){
+  var e=numv("f_entry"),x=numv("f_exit"),q=numv("f_qty"),f=numv("f_fees")||0,st=numv("f_stop"),tg=numv("f_target");
+  var box=document.getElementById("pnlPreview"); var parts=[];
+  if(e!=null&&x!=null&&q!=null){var d=curDir==="long"?(x-e):(e-x);var p=d*q-f;parts.push('<span class="'+(p>=0?"pos":"neg")+'">P&L: '+fmtMoney(p,true)+'</span>');
+    if(st!=null){var risk=Math.abs(e-st)*q;if(risk>0)parts.push('<span>R: '+(p/risk>=0?"+":"")+(p/risk).toFixed(2)+'</span>');}}
+  if(st!=null&&tg!=null){var rk=Math.abs(e-st),rw=Math.abs(tg-e);if(rk>0)parts.push('<span>R:R '+(rw/rk).toFixed(2)+'</span>');}
+  box.innerHTML=parts.join("");
+}
+function openTrade(id){
+  editingId=id||null; curMistakes=[]; curShot=null; curRules=[]; var advData=false;
+  buildMistakeChips(); buildRuleChips(); fillTagSuggestions();
+  document.getElementById("tradeModalTitle").textContent = id? t("edit") : t("newTrade");
+  document.getElementById("shotPrev").style.display="none";
+  document.getElementById("f_shot").value="";
+  ["f_symbol","f_entry","f_exit","f_qty","f_fees","f_stop","f_target","f_strat","f_tags","f_plan","f_lesson","f_notes","f_timeOpen","f_dateClose"].forEach(function(i){document.getElementById(i).value="";});
+  document.getElementById("f_dateOpen").value=new Date().toISOString().slice(0,10);
+  setDir("long"); setEmotion(0);
+  if(id){
+    var tr=curTrades().find(function(x){return x.id===id;}); if(tr){
+      document.getElementById("f_symbol").value=tr.symbol||"";
+      document.getElementById("f_dateOpen").value=tr.dateOpen||"";
+      document.getElementById("f_timeOpen").value=tr.timeOpen||"";
+      document.getElementById("f_dateClose").value=tr.dateClose||"";
+      document.getElementById("f_entry").value=tr.entry; document.getElementById("f_exit").value=tr.exit;
+      document.getElementById("f_qty").value=tr.qty; document.getElementById("f_fees").value=tr.fees||"";
+      document.getElementById("f_stop").value=tr.stop!=null?tr.stop:""; document.getElementById("f_target").value=tr.target!=null?tr.target:"";
+      document.getElementById("f_strat").value=tr.strat||""; document.getElementById("f_tags").value=(tr.tags||[]).join(", ");
+      document.getElementById("f_plan").value=tr.plan||""; document.getElementById("f_lesson").value=tr.lesson||""; document.getElementById("f_notes").value=tr.notes||"";
+      setDir(tr.dir); setEmotion(tr.emotion||0); curMistakes=(tr.mistakes||[]).slice();
+      document.querySelectorAll("#mistakeChips .chip").forEach(function(c){if(curMistakes.indexOf(c.getAttribute("data-m"))>=0)c.classList.add("active");});
+      curShot=tr.screenshot||null; if(curShot){var p=document.getElementById("shotPrev");p.src=curShot;p.style.display="block";}
+      curRules=(tr.rulesFollowed||[]).slice(); document.querySelectorAll("#ruleChips .chip").forEach(function(c){if(curRules.indexOf(c.getAttribute("data-r"))>=0)c.classList.add("active");});
+      advData=!!(tr.stop!=null||tr.target!=null||tr.fees||tr.dateClose||tr.timeOpen||(tr.tags||[]).length||tr.emotion||(tr.mistakes||[]).length||(tr.rulesFollowed||[]).length||tr.plan||tr.lesson||tr.notes||tr.screenshot);
+    }
+  }
+  document.getElementById("advFields").style.display=advData?"block":"none";
+  document.getElementById("advToggle").textContent=advData?t("advLess"):t("advMore");
+  updatePnl(); open("tradeOverlay"); setTimeout(function(){var sf=document.getElementById("f_symbol");if(sf)sf.focus();},50);
+}
+function saveTrade(){
+  var symbol=val("f_symbol").trim(),entry=numv("f_entry"),exit=numv("f_exit"),qty=numv("f_qty");
+  if(!symbol||entry==null||exit==null||qty==null){notify(lang==="fr"?"Remplis actif, entrée, sortie et quantité.":"Fill symbol, entry, exit and quantity.");return;}
+  var a=curAccount();
+  var obj={ id: editingId||Date.now(), symbol:symbol, dir:curDir, entry:entry, exit:exit, qty:qty,
+    fees:numv("f_fees")||0, stop:numv("f_stop"), target:numv("f_target"),
+    dateOpen:val("f_dateOpen"), timeOpen:val("f_timeOpen"), dateClose:val("f_dateClose")||null,
+    strat:val("f_strat").trim(), tags:val("f_tags").split(",").map(function(s){return s.trim();}).filter(Boolean),
+    emotion:curEmotion, mistakes:curMistakes.slice(), rulesFollowed:curRules.slice(), plan:val("f_plan").trim(), lesson:val("f_lesson").trim(),
+    notes:val("f_notes").trim(), screenshot:curShot };
+  if(editingId){ var i=a.trades.findIndex(function(x){return x.id===editingId;}); if(i>=0)a.trades[i]=obj; }
+  else a.trades.push(obj);
+  save(); close("tradeOverlay"); renderActive(); toast(t("saved"),null,null);
+}
+var lastDeleted=null;
+function deleteTrade(id){
+  var a=curAccount(); var i=a.trades.findIndex(function(x){return x.id===id;}); if(i<0)return;
+  lastDeleted={accountId:a.id,trade:a.trades[i],index:i}; a.trades.splice(i,1); save(); renderActive();
+  toast(t("deleted"),t("undo"),function(){var acc=state.accounts.find(function(x){return x.id===lastDeleted.accountId;});if(acc){acc.trades.splice(lastDeleted.index,0,lastDeleted.trade);save();renderActive();}});
+}
+function duplicateTrade(id){var a=curAccount();var tr=a.trades.find(function(x){return x.id===id;});if(!tr)return;var c=JSON.parse(JSON.stringify(tr));c.id=Date.now();a.trades.push(c);save();renderActive();toast(t("saved"),null,null);}
+function metric(k,v){ return '<div><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'; }
+function openDetail(id){
+  var tr=curTrades().find(function(x){return x.id===id;}); if(!tr)return;
+  var p=pnlOf(tr),r=rMultiple(tr),rr=plannedRR(tr),h=holdDays(tr);
+  var emojis=["—","😡","😕","😐","🙂","😎"];
+  var html='<div class="det-head"><div><h3 style="margin:0">'+esc(tr.symbol||"—")+' <span class="dir '+tr.dir+'">'+(tr.dir==="long"?"LONG":"SHORT")+'</span></h3><div class="muted" style="font-family:var(--mono);font-size:12px;margin-top:3px">'+(tradeDate(tr)||"—")+(tr.timeOpen?(" · "+tr.timeOpen):"")+'</div></div><div class="'+(p>=0?"pos":"neg")+'" style="font-family:var(--mono);font-size:22px;font-weight:600">'+fmtMoney(p,true)+'</div></div>';
+  html+='<div class="det-grid">'+metric(t("entry"),tr.entry)+metric(t("exit"),tr.exit)+metric(t("qty"),tr.qty)+metric(t("fees"),fmtMoney(tr.fees||0))+metric(t("stop"),tr.stop!=null?tr.stop:"—")+metric(t("target"),tr.target!=null?tr.target:"—")+metric("R-multiple",r!=null?((r>=0?"+":"")+r.toFixed(2)+"R"):"—")+metric("R:R",rr!=null?rr.toFixed(2):"—")+metric(t("strat"),esc(tr.strat||"—"))+metric(t("avgHold"),h!=null?(h.toFixed(1)+" "+t("holdUnit")):"—")+metric(t("discipline"),tr.emotion?emojis[tr.emotion]:"—")+'</div>';
+  if((tr.tags||[]).length) html+='<div class="det-block"><div class="k">'+t("tags")+'</div><div style="margin-top:4px">'+tr.tags.map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join("")+'</div></div>';
+  if((tr.mistakes||[]).length) html+='<div class="det-block"><div class="k">'+t("mistakes")+'</div><div style="margin-top:4px">'+tr.mistakes.map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join("")+'</div></div>';
+  if((tr.rulesFollowed||[]).length) html+='<div class="det-block"><div class="k">'+t("rulesFollowed")+'</div><div style="margin-top:4px">'+tr.rulesFollowed.map(function(x){return '<span class="tag" style="color:var(--green);border-color:rgba(38,208,124,.4)">'+esc(x)+'</span>';}).join("")+'</div></div>';
+  if(tr.screenshot) html+='<img class="det-shot" src="'+tr.screenshot+'">';
+  if(tr.plan) html+='<div class="det-block"><div class="k">'+t("plan")+'</div><div class="t">'+esc(tr.plan)+'</div></div>';
+  if(tr.lesson) html+='<div class="det-block"><div class="k">'+t("lesson")+'</div><div class="t">'+esc(tr.lesson)+'</div></div>';
+  if(tr.notes) html+='<div class="det-block"><div class="k">'+t("notes")+'</div><div class="t">'+esc(tr.notes)+'</div></div>';
+  html+='<div class="modal-actions"><button class="btn-danger btn-sm" id="detDel">'+t("del")+'</button><button class="btn-ghost btn-sm" id="detDup">'+t("duplicate")+'</button><button class="btn-ghost btn-sm" id="detEdit">'+t("edit")+'</button><button class="btn-primary btn-sm" id="detClose">'+t("close")+'</button></div>';
+  document.getElementById("detailBody").innerHTML=html; open("detailOverlay");
+  bind("detClose","click",function(){close("detailOverlay");});
+  bind("detEdit","click",function(){close("detailOverlay");openTrade(id);});
+  bind("detDup","click",function(){close("detailOverlay");duplicateTrade(id);});
+  bind("detDel","click",function(){close("detailOverlay");deleteTrade(id);});
+}
+function openDay(ds){
+  var list=curTrades().filter(function(tr){return tradeDate(tr)===ds;});
+  var net=list.reduce(function(a,tr){return a+pnlOf(tr);},0);
+  var html='<div class="det-head"><h3 style="margin:0">'+ds+'</h3><div class="'+(net>=0?"pos":"neg")+'" style="font-family:var(--mono);font-size:18px;font-weight:600">'+fmtMoney(net,true)+'</div></div>';
+  if(!list.length) html+='<div class="hint">'+t("noData")+'</div>';
+  else html+=list.map(function(tr){var p=pnlOf(tr);return '<div class="cf row-click" data-open="'+tr.id+'"><span style="font-weight:600">'+esc(tr.symbol)+' <span class="dir '+tr.dir+'">'+(tr.dir==="long"?"LONG":"SHORT")+'</span></span><span class="'+(p>=0?"pos":"neg")+'" style="font-family:var(--mono);font-weight:600">'+fmtMoney(p,true)+'</span></div>';}).join("");
+  html+='<div class="modal-actions"><button class="btn-primary btn-sm" id="dayClose">'+t("close")+'</button></div>';
+  document.getElementById("detailBody").innerHTML=html; open("detailOverlay");
+  bind("dayClose","click",function(){close("detailOverlay");});
+  document.querySelectorAll("#detailBody [data-open]").forEach(function(b){b.addEventListener("click",function(){openDetail(Number(b.getAttribute("data-open")));});});
+}
+function guideHtml(){
+  var fr=lang==="fr";
+  function blk(h,x){return '<div class="det-block"><div class="k">'+h+'</div><div class="t">'+x+'</div></div>';}
+  if(fr){ return '<h3 style="margin:0 0 14px">'+t("guideTitle")+'</h3>'+
+    blk("À quoi sert l'app ?","C'est ton journal de trading. Tu notes chaque trade, et l'app calcule toute seule si tu gagnes vraiment de l'argent et où tu fais des erreurs.")+
+    blk("Comment l'utiliser","1) Appuie sur le bouton + (en bas à droite) pour ajouter un trade.\n2) Le Tableau de bord montre ta performance globale.\n3) L'Analyse détaille tes forces et faiblesses ; le Calendrier ton résultat jour par jour.\n4) L'onglet Mental relie ton humeur à tes résultats.\n\nAstuce : tape une carte de chiffre pour avoir son explication.")+
+    blk("Les chiffres, simplement","• P&L net : ton gain ou ta perte total.\n• Taux de réussite : % de trades gagnants.\n• Profit factor : gagné ÷ perdu (au-dessus de 1 = profitable).\n• Espérance/trade : gain moyen par trade.\n• R-multiple : ton gain rapporté au risque pris.\n• Drawdown : ta pire baisse depuis un sommet.")+
+    blk("Important","Tes données restent sur ton appareil. Cet outil suit et analyse — il ne donne aucun conseil d'investissement."); }
+  return '<h3 style="margin:0 0 14px">'+t("guideTitle")+'</h3>'+
+    blk("What is this app?","It's your trading journal. You log every trade and the app automatically tells you whether you're really making money and where you make mistakes.")+
+    blk("How to use it","1) Tap the + button (bottom right) to add a trade.\n2) The Dashboard shows your overall performance.\n3) Analytics breaks down strengths and weaknesses; the Calendar shows daily results.\n4) The Mindset tab links your mood to your results.\n\nTip: tap any stat card to see its explanation.")+
+    blk("The numbers, simply","• Net P&L: your total gain or loss.\n• Win rate: % of winning trades.\n• Profit factor: won ÷ lost (above 1 = profitable).\n• Expectancy: average gain per trade.\n• R-multiple: your gain relative to the risk taken.\n• Drawdown: your worst drop from a peak.")+
+    blk("Important","Your data stays on your device. This tool tracks and analyzes — it gives no investment advice.");
+}
+function openGuide(){ document.getElementById("guideBody").innerHTML=guideHtml()+'<div class="modal-actions"><button class="btn-primary" id="guideClose">'+t("close")+'</button></div>'; open("guideOverlay"); bind("guideClose","click",function(){close("guideOverlay"); if(!state.settings.profile){ setTimeout(function(){openQuiz("profile");},250); } }); }
+function openRecap(){
+  var tr=scope(curTrades()), s=computeStats(tr), fr=lang==="fr";
+  var pm={all:t("pAll"),"30":t("p30"),"90":t("p90"),month:t("pMonth"),year:t("pYear")}; var pl=pm[period]||t("pAll");
+  var html='<div class="recap" id="recapCard">'+
+    '<div class="rhead"><div class="rlogo">↗</div><div><div style="font-family:var(--display);font-weight:800">TradeLedger</div><div style="font-size:11px;color:#7d8a9c">'+esc(pl)+'</div></div></div>'+
+    '<div class="rk">'+t("netPnl")+'</div><div class="rbig '+(s.net>=0?"pos":"neg")+'">'+fmtMoney(s.net,true)+'</div>'+
+    '<div class="rgrid">'+
+      '<div><div class="rk">'+t("winRate")+'</div><div class="rv">'+s.winRate.toFixed(0)+'%</div></div>'+
+      '<div><div class="rk">'+t("profitFactor")+'</div><div class="rv">'+(s.pf===Infinity?"∞":s.pf.toFixed(2))+'</div></div>'+
+      '<div><div class="rk">'+t("trades")+'</div><div class="rv">'+s.count+'</div></div>'+
+      '<div><div class="rk">'+t("expectancy")+'</div><div class="rv '+(s.expectancy>=0?"pos":"neg")+'">'+fmtMoney(s.expectancy,true)+'</div></div>'+
+    '</div><div class="rfoot">'+(fr?"Suivi avec TradeLedger":"Tracked with TradeLedger")+'</div></div>'+
+    '<div class="modal-actions"><button class="btn-ghost" id="recapCopy">'+t("copySummary")+'</button><button class="btn-primary" id="recapClose">'+t("close")+'</button></div>';
+  document.getElementById("recapBody").innerHTML=html; open("recapOverlay");
+  bind("recapClose","click",function(){close("recapOverlay");});
+  bind("recapCopy","click",function(){
+    var txt=(fr?"Mes stats de trading ("+pl+") :":"My trading stats ("+pl+"):")+"\n"+t("netPnl")+": "+fmtMoney(s.net,true)+"\n"+t("winRate")+": "+s.winRate.toFixed(0)+"%\n"+t("profitFactor")+": "+(s.pf===Infinity?"∞":s.pf.toFixed(2))+"\n"+t("trades")+": "+s.count;
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){toast(t("copied"),null,null);},function(){notify(txt);}); } else notify(txt); }catch(e){ notify(txt); }
+  });
+}
+function fillTagSuggestions(){
+  var box=document.getElementById("tagSugg"); if(!box)return;
+  var set={}; curTrades().forEach(function(tr){(tr.tags||[]).forEach(function(g){if(g)set[g]=1;});});
+  var tags=Object.keys(set).sort().slice(0,12);
+  box.innerHTML=tags.map(function(g){return '<div class="chip" data-tg="'+esc(g)+'">+ '+esc(g)+'</div>';}).join("");
+  box.querySelectorAll(".chip").forEach(function(c){c.addEventListener("click",function(){var g=c.getAttribute("data-tg");var inp=document.getElementById("f_tags");var cur=inp.value.split(",").map(function(s){return s.trim();}).filter(Boolean);if(cur.indexOf(g)<0){cur.push(g);inp.value=cur.join(", ");}});});
+}
+
+/* screenshot handling with downscale */
+document.getElementById("f_shot").addEventListener("change",function(e){
+  var file=e.target.files[0]; if(!file)return; var reader=new FileReader();
+  reader.onload=function(ev){var img=new Image();img.onload=function(){
+    var max=900,sc=Math.min(1,max/Math.max(img.width,img.height));var cv=document.createElement("canvas");
+    cv.width=img.width*sc;cv.height=img.height*sc;cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+    curShot=cv.toDataURL("image/jpeg",0.7);var p=document.getElementById("shotPrev");p.src=curShot;p.style.display="block";};
+    img.src=ev.target.result;};
+  reader.readAsDataURL(file);
+});
+
+/* ============================= Cashflow ============================= */
+function openCf(){document.getElementById("cf_date").value=new Date().toISOString().slice(0,10);document.getElementById("cf_amount").value="";open("cfOverlay");}
+function saveCf(){var amt=parseFloat(val("cf_amount"));if(isNaN(amt)||amt<=0){notify(lang==="fr"?"Montant invalide.":"Invalid amount.");return;}
+  state.cashflows.push({id:Date.now(),accountId:curAccount().id,type:val("cf_type"),amount:amt,date:val("cf_date")});save();close("cfOverlay");renderAccount();}
+
+/* ============================= Account ============================= */
+var acctEditing=false;
+function openAcct(edit){acctEditing=edit;var a=curAccount();
+  document.getElementById("acctModalTitle").textContent= edit? t("renameAcct") : t("newAccount");
+  document.getElementById("a_name").value= edit? a.name : "";
+  document.getElementById("a_curr").value= edit? a.currency : "€";
+  document.getElementById("a_start").value= edit? (a.startBalance||"") : "";
+  open("acctOverlay");}
+function saveAcct(){var name=val("a_name").trim()||"Compte";
+  if(acctEditing){var a=curAccount();a.name=name;a.currency=val("a_curr");a.startBalance=parseFloat(val("a_start"))||0;}
+  else{var id=Date.now();state.accounts.push({id:id,name:name,currency:val("a_curr"),startBalance:parseFloat(val("a_start"))||0,trades:[],positions:[]});state.activeId=id;}
+  save();close("acctOverlay");refreshAcctSel();renderActive();renderAccount();}
+function deleteAccount(){if(state.accounts.length<=1)return;confirmModal(t("confirmDelAcct"),function(){
+  state.accounts=state.accounts.filter(function(a){return a.id!==state.activeId;});state.activeId=state.accounts[0].id;save();refreshAcctSel();renderActive();renderAccount();});}
+
+/* ============================= Calculator ============================= */
+function openCalc(){["c_capital","c_risk","c_entry","c_stop"].forEach(function(i){document.getElementById(i).value="";});document.getElementById("calcResult").innerHTML='<div class="hint">'+t("notAdvice")+'</div>';open("calcOverlay");}
+function calcUpdate(){var cap=numv("c_capital"),rp=numv("c_risk"),en=numv("c_entry"),st=numv("c_stop");var box=document.getElementById("calcResult");
+  if(cap==null||rp==null||en==null||st==null||Math.abs(en-st)===0){box.innerHTML='<div class="hint">'+t("notAdvice")+'</div>';return;}
+  var riskAmt=cap*rp/100,perUnit=Math.abs(en-st),size=riskAmt/perUnit;
+  box.innerHTML='<div class="segrow"><div class="name">'+t("riskAmt")+'</div><div class="bar" style="background:none"></div><div class="num">'+fmtMoney(riskAmt)+'</div></div>'+
+    '<div class="segrow"><div class="name">'+t("size")+'</div><div class="bar" style="background:none"></div><div class="num pos">'+size.toLocaleString(lang==="fr"?"fr-FR":"en-US",{maximumFractionDigits:4})+' '+t("shares")+'</div></div>';}
+
+/* ============================= Backup / CSV ============================= */
+function download(name,content,type){var blob=new Blob([content],{type:type});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
+function exportJson(){download("tradeledger-backup.json",JSON.stringify(state,null,2),"application/json");}
+function exportCsv(){var tr=curTrades();if(!tr.length){notify(t("noData"));return;}
+  var head=["dateOpen","dateClose","symbol","dir","entry","exit","qty","fees","stop","target","strat","tags","emotion","pnl","notes"];
+  var lines=[head.join(",")];
+  tr.forEach(function(x){var row=[x.dateOpen||"",x.dateClose||"",x.symbol||"",x.dir,x.entry,x.exit,x.qty,x.fees||0,x.stop!=null?x.stop:"",x.target!=null?x.target:"",x.strat||"",'"'+(x.tags||[]).join(";")+'"',x.emotion||"",pnlOf(x).toFixed(2),'"'+(x.notes||"").replace(/"/g,'""')+'"'];lines.push(row.join(","));});
+  download("tradeledger.csv",lines.join("\n"),"text/csv");}
+var importMode="json";
+function openImport(mode){
+  importMode=mode;
+  document.getElementById("importTitle").textContent = mode==="json"? t("importJson") : t("importCsv");
+  var f=document.getElementById("importPickFile"); f.value=""; f.setAttribute("accept", mode==="json"?".json,application/json":".csv,text/csv");
+  var pa=document.getElementById("importPaste"); pa.value=""; pa.setAttribute("placeholder", mode==="json"?'{"accounts":[ ... ]}':"date,symbol,dir,entry,exit,qty, ...");
+  open("importOverlay");
+}
+function processImport(text){
+  text=(text||"").trim();
+  if(!text){ notify(t("importEmpty")); return; }
+  if(importMode==="json"){
+    try{ var data=JSON.parse(text);
+      if(data && data.accounts){ state=data; if(!state.activeId)state.activeId=state.accounts[0].id; if(!state.cashflows)state.cashflows=[]; if(!state.checkins)state.checkins=[]; if(!state.coachChecks)state.coachChecks=[]; if(!state.deepResults)state.deepResults=[]; if(!state.settings)state.settings={theme:"dark"}; if(!state.settings.rules)state.settings.rules=[]; state.accounts.forEach(function(a){if(!a.positions)a.positions=[];}); save(); refreshAcctSel(); applyTheme(); close("importOverlay"); renderActive(); renderAccount(); toast(t("saved"),null,null); }
+      else notify(lang==="fr"?"Format JSON invalide (aucun compte trouvé).":"Invalid JSON (no accounts found).");
+    }catch(e){ notify(lang==="fr"?"JSON invalide.":"Invalid JSON."); }
+  } else {
+    var res=csvImportTrades(text);
+    if(res.error==="missing"){ notify(t("csvMissing")+res.missing.join(", ")+"\n\n("+(lang==="fr"?"colonnes lues":"file columns")+" : "+res.headers.join(", ")+")"); return; }
+    if(res.error||!res.trades||!res.trades.length){ notify(lang==="fr"?"Aucun trade lisible dans ce CSV.":"No readable trades in this CSV."); return; }
+    var a=curAccount();
+    confirmModal(t("csvConfirm").replace("{n}",res.trades.length).replace("{a}",a.name), function(){
+      var base=Date.now(); res.trades.forEach(function(tr,i){ tr.id=base+i; a.trades.push(tr); });
+      save(); close("importOverlay"); renderActive(); renderAccount();
+      toast(res.trades.length+t("csvImported")+(res.skipped?(" · "+res.skipped+t("csvSkippedTxt")):""),null,null);
+    });
+  }
+}
+function confirmModal(msg,onOk){ var m=document.getElementById("confirmMsg"); m.textContent=msg; var ca=document.getElementById("confirmCancel"), ok=document.getElementById("confirmOk"); ca.style.display=""; ca.textContent=t("cancel"); ok.textContent="OK"; open("confirmOverlay"); ok.onclick=function(){close("confirmOverlay"); if(onOk)onOk();}; ca.onclick=function(){close("confirmOverlay");}; }
+function notify(msg){ var m=document.getElementById("confirmMsg"); m.textContent=msg; document.getElementById("confirmCancel").style.display="none"; var ok=document.getElementById("confirmOk"); ok.textContent="OK"; open("confirmOverlay"); ok.onclick=function(){close("confirmOverlay");}; }
+document.getElementById("importPickFile").addEventListener("change",function(e){var file=e.target.files[0];if(!file)return;var r=new FileReader();r.onload=function(ev){document.getElementById("importPaste").value=ev.target.result;};r.readAsText(file);});
+document.getElementById("importCancel").addEventListener("click",function(){close("importOverlay");});
+document.getElementById("importDo").addEventListener("click",function(){processImport(document.getElementById("importPaste").value);});
+
+
+/* ============================= Helpers / wiring ============================= */
+function bind(id,evt,fn){var e=document.getElementById(id);if(e)e.addEventListener(evt,fn);}
+function open(id){document.getElementById(id).classList.add("open");}
+function close(id){document.getElementById(id).classList.remove("open");}
+var toastTimer=null;
+function toast(msg,actionLabel,fn){var el=document.getElementById("toast");document.getElementById("toastMsg").textContent=msg;var b=document.getElementById("toastAction");
+  if(actionLabel){b.textContent=actionLabel;b.style.display="";b.onclick=function(){fn();el.classList.remove("show");};}else{b.style.display="none";}
+  el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove("show");},4000);}
+
+function freshStart(){ var s={theme:state.settings.theme,lang:state.settings.lang,goal:state.settings.goal,rules:state.settings.rules||[],dailyLossLimit:state.settings.dailyLossLimit,profile:state.settings.profile,live:state.settings.live,wallet:state.settings.wallet}; var sym=curSymbol(); var nid=Date.now(); state={accounts:[{id:nid,name:(lang==="fr"?"Mon compte":"My account"),currency:sym,startBalance:0,trades:[],positions:[]}],activeId:nid,cashflows:[],checkins:[],coachChecks:[],deepResults:[],settings:s}; save(); location.reload(); }
+function refreshAcctSel(){var sel=document.getElementById("acctSel");sel.innerHTML=state.accounts.map(function(a){return '<option value="'+a.id+'"'+(a.id===state.activeId?" selected":"")+'>'+esc(a.name)+'</option>';}).join("");}
+
+var activeTab="dashboard";
+function renderActive(){
+  if(activeTab==="dashboard")renderDashboard();
+  else if(activeTab==="trades")renderTrades();
+  else if(activeTab==="calendar")renderCalendar();
+  else if(activeTab==="analyse")renderAnalyse();
+  else if(activeTab==="mental")renderMental();
+  else if(activeTab==="coach")renderCoachTab();
+  else if(activeTab==="account")renderAccount();
+}
+function switchTab(name){activeTab=name;
+  document.querySelectorAll("#tabs button").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-tab")===name);});
+  document.querySelectorAll(".tab").forEach(function(s){s.style.display="none";});
+  document.getElementById("tab-"+name).style.display="";
+  window.scrollTo(0,0);
+  renderActive();
+  if(name==="trades" && state.settings.live) startLive(); else stopLive();}
+
+/* demo data */
+function seedDemo(){
+  var id=1; function d(off){var dt=new Date();dt.setDate(dt.getDate()-off);return dt.toISOString().slice(0,10);}
+  var t1=[
+    {symbol:"BTC",dir:"long",entry:62000,exit:64500,qty:0.1,stop:61000,target:65000,strat:"Breakout",tags:["momentum"],emotion:4,dOpen:34,tOpen:"09:30"},
+    {symbol:"ETH",dir:"long",entry:3100,exit:2980,qty:1,stop:3050,strat:"Breakout",tags:["news"],emotion:2,mistakes:["FOMO"],dOpen:32,tOpen:"15:10"},
+    {symbol:"AAPL",dir:"long",entry:188,exit:194,qty:10,stop:185,target:195,strat:"Swing",tags:["earnings"],emotion:5,dOpen:30,tOpen:"16:05"},
+    {symbol:"EUR/USD",dir:"short",entry:1.085,exit:1.078,qty:10000,stop:1.088,strat:"Scalp",emotion:4,dOpen:28,tOpen:"08:20"},
+    {symbol:"BTC",dir:"short",entry:66000,exit:66800,qty:0.05,stop:66500,strat:"Scalp",emotion:1,mistakes:["Revenge trade"],dOpen:25,tOpen:"22:40"},
+    {symbol:"TSLA",dir:"long",entry:240,exit:255,qty:5,stop:234,target:258,strat:"Swing",emotion:5,dOpen:21,tOpen:"15:45"},
+    {symbol:"ETH",dir:"long",entry:2950,exit:3120,qty:2,stop:2900,target:3150,strat:"Breakout",tags:["momentum"],emotion:4,dOpen:18,tOpen:"10:00"},
+    {symbol:"AAPL",dir:"short",entry:196,exit:199,qty:8,stop:198,strat:"Scalp",emotion:2,mistakes:["Trop tôt","Sans stop"],dOpen:15,tOpen:"17:30"},
+    {symbol:"EUR/USD",dir:"long",entry:1.076,exit:1.082,qty:10000,stop:1.073,target:1.083,strat:"Swing",emotion:4,dOpen:11,tOpen:"09:00"},
+    {symbol:"BTC",dir:"long",entry:67500,exit:71000,qty:0.08,stop:66800,target:72000,strat:"Breakout",tags:["momentum","news"],emotion:5,dOpen:7,tOpen:"11:15"},
+    {symbol:"TSLA",dir:"short",entry:258,exit:262,qty:4,stop:260,strat:"Scalp",emotion:1,mistakes:["Revenge trade","Sur-trading"],dOpen:4,tOpen:"20:10"},
+    {symbol:"ETH",dir:"long",entry:3200,exit:3260,qty:1.5,stop:3160,target:3300,strat:"Swing",emotion:4,dOpen:1,tOpen:"14:25"}
+  ];
+  var trades=t1.map(function(x){return {id:id++,symbol:x.symbol,dir:x.dir,entry:x.entry,exit:x.exit,qty:x.qty,fees:0,stop:x.stop!=null?x.stop:null,target:x.target!=null?x.target:null,dateOpen:d(x.dOpen),timeOpen:x.tOpen,dateClose:d(x.dOpen),strat:x.strat,tags:x.tags||[],emotion:x.emotion||0,mistakes:x.mistakes||[],rulesFollowed:[],plan:"",lesson:"",notes:"",screenshot:null};});
+  var demoRules=["J'ai un stop-loss","Je respecte mon risque max","Pas de revenge trade","Je suis mon plan"];
+  trades.forEach(function(tr){ tr.rulesFollowed = tr.emotion>=4 ? demoRules.slice() : (tr.emotion===3 ? demoRules.slice(0,2) : []); });
+  state={accounts:[{id:100,name:"Compte démo",currency:"€",startBalance:10000,trades:trades,positions:[
+    {id:401,symbol:"BTC",dir:"long",entry:71000,qty:0.05,mark:72500,stop:69000,target:75000,strat:"Breakout",dateOpen:d(1)},
+    {id:402,symbol:"ETH",dir:"short",entry:3300,qty:1,mark:3250,stop:3380,strat:"Scalp",dateOpen:d(0)}
+  ]}],activeId:100,cashflows:[{id:200,accountId:100,type:"deposit",amount:10000,date:d(40)}],checkins:[
+    {id:301,date:d(34),mood:4,energy:4,stress:2,tags:["Confiant"],note:""},
+    {id:302,date:d(32),mood:2,energy:3,stress:4,tags:["Stressé","FOMO"],note:""},
+    {id:303,date:d(25),mood:1,energy:2,stress:5,tags:["Frustré"],note:""},
+    {id:304,date:d(18),mood:4,energy:4,stress:2,tags:["Calme"],note:""},
+    {id:305,date:d(7),mood:5,energy:5,stress:1,tags:["Motivé"],note:""},
+    {id:306,date:d(4),mood:2,energy:2,stress:5,tags:["Frustré"],note:""},
+    {id:307,date:d(1),mood:4,energy:3,stress:2,tags:["Concentré"],note:""}
+  ],coachChecks:[
+    {id:401,date:d(4),answers:[2,2,2,1,1,1],verdict:"stop",distress:true},
+    {id:402,date:d(1),answers:[0,1,0,0,0,0],verdict:"go",distress:false}
+  ],deepResults:[
+    {id:501,date:d(3),scores:{emotion:55,discipline:38,loss:44,patience:69,confidence:75,focus:81},overall:60}
+  ],settings:{theme:"dark",demo:true,rules:demoRules.slice(),profile:{risk:"mid",answers:[1,1,1,1,1],date:d(40),label:"Équilibré"}}};
+}
+
+/* ============================= Init ============================= */
+function applyTheme(){document.documentElement.setAttribute("data-theme",state.settings.theme);document.getElementById("themeBtn").textContent=state.settings.theme==="dark"?"☾":"☀";}
+function init(){
+  if(!load()){ seedDemo(); save(); }
+  if(!state.cashflows)state.cashflows=[];
+  if(!state.checkins)state.checkins=[];
+  if(!state.coachChecks)state.coachChecks=[];
+  if(!state.deepResults)state.deepResults=[];
+  state.accounts.forEach(function(a){if(!a.positions)a.positions=[];});
+  if(!state.settings)state.settings={theme:"dark"};
+  if(!state.settings.rules)state.settings.rules=[];
+  lang = state.settings.lang || "fr";
+  applyTheme(); applyI18n(); buildMistakeChips(); refreshAcctSel();
+  switchTab("dashboard");
+  // top wiring
+  document.getElementById("addBtn").addEventListener("click",function(){open("chooseOverlay");});
+  document.getElementById("fab").addEventListener("click",function(){open("chooseOverlay");});
+  bind("chooseCancel","click",function(){close("chooseOverlay");});
+  bind("chooseClosed","click",function(){close("chooseOverlay");openTrade(null);});
+  bind("chooseLive","click",function(){close("chooseOverlay");openPosition(null);});
+  document.getElementById("helpBtn").addEventListener("click",openGuide);
+  document.getElementById("acctSel").addEventListener("change",function(e){state.activeId=Number(e.target.value);save();renderActive();});
+  document.getElementById("themeBtn").addEventListener("click",function(){state.settings.theme=state.settings.theme==="dark"?"light":"dark";document.querySelector('meta[name=theme-color]').setAttribute("content",state.settings.theme==="dark"?"#0a0e14":"#f4f6f9");save();applyTheme();renderActive();});
+  document.getElementById("langBtn").addEventListener("click",function(){lang=lang==="fr"?"en":"fr";state.settings.lang=lang;save();applyI18n();buildMistakeChips();renderActive();});
+  document.querySelectorAll("#tabs button").forEach(function(b){b.addEventListener("click",function(){switchTab(b.getAttribute("data-tab"));});});
+  // modal wiring
+  document.querySelectorAll("#dirSeg button").forEach(function(b){b.addEventListener("click",function(){setDir(b.getAttribute("data-dir"));});});
+  document.querySelectorAll("#emojiRow button").forEach(function(b){b.addEventListener("click",function(){setEmotion(Number(b.getAttribute("data-e")));});});
+  ["f_entry","f_exit","f_qty","f_fees","f_stop","f_target"].forEach(function(i){document.getElementById(i).addEventListener("input",updatePnl);});
+  bind("tradeCancel","click",function(){close("tradeOverlay");});
+  bind("tradeSave","click",saveTrade);
+  document.getElementById("tradeOverlay").addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.tagName!=="TEXTAREA"){e.preventDefault();saveTrade();}});
+  bind("advToggle","click",function(){var a=document.getElementById("advFields");var show=a.style.display==="none";a.style.display=show?"block":"none";document.getElementById("advToggle").textContent=show?t("advLess"):t("advMore");});
+  bind("cfCancel","click",function(){close("cfOverlay");});
+  bind("cfSave","click",saveCf);
+  bind("acctCancel","click",function(){close("acctOverlay");});
+  bind("acctSave","click",saveAcct);
+  bind("posCancel","click",function(){close("posOverlay");});
+  bind("posSave","click",savePosition);
+  document.querySelectorAll("#posDirSeg button").forEach(function(b){b.addEventListener("click",function(){setPosDir(b.getAttribute("data-pdir"));});});
+  bind("closeCancel","click",function(){close("closeOverlay");});
+  bind("closeSave","click",doClosePos);
+  bind("calcClose","click",function(){close("calcOverlay");});
+  ["c_capital","c_risk","c_entry","c_stop"].forEach(function(i){document.getElementById(i).addEventListener("input",calcUpdate);});
+  document.querySelectorAll(".overlay").forEach(function(o){o.addEventListener("click",function(e){if(e.target===o)o.classList.remove("open");});});
+  // keyboard shortcut
+  document.addEventListener("keydown",function(e){if(e.key==="n"&&!/input|textarea|select/i.test(document.activeElement.tagName)&&!document.querySelector(".overlay.open")){open("chooseOverlay");}if(e.key==="Escape"){document.querySelectorAll(".overlay.open").forEach(function(o){o.classList.remove("open");});}});
+  document.querySelectorAll(".overlay").forEach(function(o){o.addEventListener("click",function(e){ if(e.target===o && ["detailOverlay","recapOverlay","guideOverlay","chooseOverlay","confirmOverlay"].indexOf(o.id)>=0){ o.classList.remove("open"); } });});
+  window.addEventListener("resize",function(){if(activeTab==="dashboard"||activeTab==="analyse"||activeTab==="mental")renderActive();});
+  if(!state.settings.seenGuide){ state.settings.seenGuide=true; save(); setTimeout(openGuide,350); }
+}
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}
+init();
+</script>
+</body>
+</html>
